@@ -1,0 +1,2015 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seminar Presentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* ----------------------------------------------------
+       Design Tokens & Reset (Emoji Free, Enterprise Style)
+       ---------------------------------------------------- */
+    :root {
+      --accent-primary: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-subtle: rgba(99, 102, 241, 0.12);
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+      
+      --bg-presentation: #020617;
+      --bg-slide: #0b0f19;
+      --bg-surface: #111827;
+      --bg-surface-elevated: #1e293b;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border-subtle: #1e293b;
+      --border-strong: #334155;
+      --shadow-slide: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+
+      --color-success: #10b981;
+      --color-warning: #f59e0b;
+      --color-danger: #ef4444;
+      --color-info: #0ea5e9;
+
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
+    }
+
+    [data-theme="light"] {
+      --bg-presentation: #f1f5f9;
+      --bg-slide: #ffffff;
+      --bg-surface: #ffffff;
+      --bg-surface-elevated: #f8fafc;
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border-subtle: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --shadow-slide: 0 25px 50px -12px rgba(0, 0, 0, 0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%;
+      background-color: var(--bg-presentation);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+    }
+
+    /* ----------------------------------------------------
+       MODE 1: SLIDE PRESENTATION VIEW
+       ---------------------------------------------------- */
+    body.mode-slide {
+      overflow: hidden;
+      user-select: none;
+    }
+
+    body.mode-slide #docs-view-container { display: none !important; }
+    body.mode-slide #stage-container { display: flex; }
+
+    #stage-container {
+      width: 100vw; height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    #slide-viewport {
+      width: 1920px;
+      height: 1080px;
+      background-color: var(--bg-slide);
+      box-shadow: var(--shadow-slide);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      transform-origin: center center;
+      transition: background-color 0.2s ease;
+    }
+
+    .slide {
+      width: 100%; height: 100%;
+      padding: 60px 80px 40px 80px;
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      top: 0; left: 0;
+      opacity: 0;
+      transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translateY(8px);
+    }
+
+    .slide.active {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0);
+      z-index: 10;
+    }
+
+    /* Security Classification Badge (Header Top Center) */
+    .slide-classification {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 4px 18px;
+      border-radius: 4px;
+      z-index: 100;
+      pointer-events: none;
+      font-family: var(--font-mono);
+      display: inline-block;
+      line-height: 1;
+    }
+    .classification-confidential {
+      background: rgba(239, 68, 68, 0.18);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.5);
+    }
+    .classification-internal {
+      background: rgba(245, 158, 11, 0.18);
+      color: #f59e0b;
+      border: 1px solid rgba(245, 158, 11, 0.5);
+    }
+    .classification-public {
+      background: rgba(16, 185, 129, 0.18);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.5);
+    }
+    .classification-restricted {
+      background: rgba(99, 102, 241, 0.18);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.5);
+    }
+
+    /* Slide Header with Distinct Divider */
+    .slide-header {
+      margin-bottom: 22px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-shrink: 0;
+    }
+    .slide-category {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--accent-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 4px;
+    }
+    .slide-title {
+      font-size: 44px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* Slide Footer */
+    .slide-footer {
+      height: 36px;
+      margin-top: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 16px;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 8px;
+      flex-shrink: 0;
+      font-weight: 500;
+    }
+    [data-theme="light"] .slide-footer {
+      color: #334155;
+      border-top-color: #cbd5e1;
+    }
+
+    /* ----------------------------------------------------
+       Slide Layout Archetypes (Split vs Stacked)
+       ---------------------------------------------------- */
+    /* Cover */
+    .slide-cover {
+      justify-content: center;
+      align-items: flex-start;
+      padding: 90px 120px;
+      background: radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 60%);
+    }
+    .cover-badge {
+      display: inline-block;
+      padding: 8px 18px;
+      background: var(--accent-subtle);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: var(--accent-primary);
+      border-radius: 4px;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      margin-bottom: 22px;
+    }
+    .cover-title {
+      font-size: 68px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 22px;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      max-width: 1500px;
+    }
+    .cover-subtitle {
+      font-size: 26px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      margin-bottom: 48px;
+      max-width: 1350px;
+      line-height: 1.45;
+    }
+    .cover-meta {
+      display: flex;
+      gap: 40px;
+      font-size: 20px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 24px;
+      width: 100%;
+    }
+    .cover-meta strong { color: var(--text-primary); }
+
+    /* Agenda */
+    .agenda-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      margin-top: 12px;
+    }
+    .agenda-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 28px 32px;
+      display: flex;
+      gap: 22px;
+      align-items: flex-start;
+    }
+    .agenda-num {
+      width: 48px; height: 48px;
+      background: var(--accent-gradient);
+      color: white;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 800;
+      flex-shrink: 0;
+    }
+    .agenda-content h3 { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+    .agenda-content p { font-size: 19px; color: var(--text-secondary); line-height: 1.5; }
+
+    /* Layout 1: Split (Left 34% Bullets, Right 66% Huge Visual) */
+    .split-layout {
+      display: grid;
+      grid-template-columns: 0.72fr 1.48fr;
+      gap: 36px;
+      height: 100%;
+      min-height: 0;
+    }
+    .split-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+    }
+    .split-bullets {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .split-bullets li {
+      font-size: 25px;
+      line-height: 1.5;
+      color: var(--text-primary);
+      position: relative;
+      padding-left: 32px;
+    }
+    .split-bullets li::before {
+      content: "";
+      position: absolute;
+      left: 6px; top: 13px;
+      width: 10px; height: 10px;
+      background: var(--accent-primary);
+      border-radius: 50%;
+    }
+    .split-bullets li strong { color: var(--accent-primary); }
+    .split-right {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100%;
+      min-height: 740px;
+      position: relative;
+    }
+    .split-right .slide-canvas-card {
+      min-height: 740px;
+    }
+
+    /* Layout 2: Stacked (Top Compact Bullets, Bottom Maximum Wide Visual) */
+    .stacked-layout {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+      gap: 16px;
+    }
+    .stacked-top {
+      flex-shrink: 0;
+    }
+    .stacked-bullets {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      gap: 10px 32px;
+    }
+    .stacked-bullets li {
+      font-size: 23px;
+      line-height: 1.4;
+      color: var(--text-primary);
+      position: relative;
+      padding-left: 28px;
+    }
+    .stacked-bullets li::before {
+      content: "";
+      position: absolute;
+      left: 6px; top: 11px;
+      width: 9px; height: 9px;
+      background: var(--accent-primary);
+      border-radius: 50%;
+    }
+    .stacked-bullets li strong { color: var(--accent-primary); }
+    .stacked-bottom {
+      flex: 1;
+      height: 100%;
+      min-height: 660px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .stacked-bottom .slide-canvas-card {
+      min-height: 660px;
+    }
+
+    /* Canvas Card (Enlarged High-Def Architecture View) */
+    .slide-canvas-card {
+      width: 100%; height: 100%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      min-height: 0;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+    .slide-canvas-toolbar {
+      padding: 10px 18px;
+      background: var(--bg-surface-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .slide-canvas-btn {
+      padding: 6px 14px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      color: var(--text-secondary);
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .slide-canvas-btn:hover {
+      background: var(--accent-subtle);
+      color: var(--accent-primary);
+      border-color: var(--accent-primary);
+    }
+    .slide-canvas-body {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      min-height: 560px;
+      overflow: visible;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .slide-canvas-body svg {
+      width: 100% !important;
+      height: 100% !important;
+      min-height: 540px !important;
+      max-width: 100% !important;
+      object-fit: contain;
+    }
+
+    /* Full Diagram Slide (85% Maximum Canvas) */
+    .slide-full-diagram .slide-body {
+      height: 100%;
+      min-height: 800px;
+    }
+    .slide-full-diagram .slide-canvas-card {
+      height: 100%;
+      min-height: 780px;
+    }
+    .slide-full-diagram .slide-canvas-body svg {
+      min-height: 720px !important;
+    }
+
+    /* Universal Mermaid Styles & Legibility Engine */
+    .mermaid svg {
+      font-family: var(--font-sans) !important;
+      font-size: 18px !important;
+    }
+    [data-theme="light"] .mermaid svg {
+      background: transparent !important;
+    }
+    [data-theme="light"] .mermaid .node text,
+    [data-theme="light"] .mermaid .actor text,
+    [data-theme="light"] .mermaid text.actor,
+    [data-theme="light"] .mermaid .label text,
+    [data-theme="light"] .mermaid .label span,
+    [data-theme="light"] .mermaid .messageText,
+    [data-theme="light"] .mermaid text {
+      fill: #0f172a !important;
+      color: #0f172a !important;
+      font-weight: 600 !important;
+    }
+    [data-theme="light"] .mermaid .node rect,
+    [data-theme="light"] .mermaid .node circle,
+    [data-theme="light"] .mermaid .node ellipse,
+    [data-theme="light"] .mermaid .node polygon {
+      fill: #ffffff !important;
+      stroke: #6366f1 !important;
+      stroke-width: 1.5px !important;
+    }
+    [data-theme="light"] .mermaid .cluster rect {
+      fill: #f1f5f9 !important;
+      stroke: #94a3b8 !important;
+    }
+    [data-theme="light"] .mermaid .actor {
+      fill: #e0e7ff !important;
+      stroke: #6366f1 !important;
+    }
+    [data-theme="light"] .mermaid .note {
+      fill: #fef3c7 !important;
+      stroke: #f59e0b !important;
+    }
+    [data-theme="light"] .mermaid .noteText,
+    [data-theme="light"] .mermaid .noteText span {
+      fill: #92400e !important;
+      color: #92400e !important;
+    }
+    [data-theme="light"] .mermaid .edgePath path {
+      stroke: #6366f1 !important;
+      stroke-width: 2px !important;
+    }
+    [data-theme="light"] .mermaid .marker {
+      fill: #6366f1 !important;
+      stroke: #6366f1 !important;
+    }
+
+    [data-theme="dark"] .mermaid .node text,
+    [data-theme="dark"] .mermaid .actor text,
+    [data-theme="dark"] .mermaid text.actor,
+    [data-theme="dark"] .mermaid .label text,
+    [data-theme="dark"] .mermaid .label span,
+    [data-theme="dark"] .mermaid .messageText,
+    [data-theme="dark"] .mermaid text {
+      fill: #f8fafc !important;
+      color: #f8fafc !important;
+    }
+    [data-theme="dark"] .mermaid .node rect,
+    [data-theme="dark"] .mermaid .node circle,
+    [data-theme="dark"] .mermaid .node ellipse,
+    [data-theme="dark"] .mermaid .node polygon {
+      fill: #1e293b !important;
+      stroke: #818cf8 !important;
+    }
+    [data-theme="dark"] .mermaid .cluster rect {
+      fill: rgba(30, 41, 59, 0.6) !important;
+      stroke: #475569 !important;
+    }
+    [data-theme="dark"] .mermaid .actor {
+      fill: #312e81 !important;
+      stroke: #818cf8 !important;
+    }
+    [data-theme="dark"] .mermaid .edgePath path {
+      stroke: #818cf8 !important;
+      stroke-width: 2px !important;
+    }
+    [data-theme="dark"] .mermaid .marker {
+      fill: #818cf8 !important;
+      stroke: #818cf8 !important;
+    }
+
+    /* Bitfield Table & Comparison Table (Enlarged) */
+    .bitfield-table-wrap {
+      width: 100%;
+      margin: 8px 0;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--bg-surface);
+    }
+    .bitfield-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 18px;
+      text-align: center;
+    }
+    .bitfield-table th {
+      background: var(--bg-surface-elevated);
+      padding: 14px 12px;
+      border-bottom: 2px solid var(--border-strong);
+      border-right: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .bitfield-table td {
+      padding: 16px 12px;
+      border-right: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      font-size: 18px;
+    }
+    .bitfield-table td.highlight {
+      background: var(--accent-subtle);
+      color: var(--accent-primary);
+      font-weight: 800;
+    }
+
+    /* Takeaway Slide */
+    .slide-takeaway {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 80px 140px;
+      background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.12) 0%, transparent 70%);
+    }
+    .takeaway-quote {
+      font-size: 46px;
+      font-weight: 800;
+      line-height: 1.35;
+      letter-spacing: -0.02em;
+      margin-bottom: 28px;
+      color: var(--text-primary);
+    }
+    .takeaway-quote strong { color: var(--accent-primary); }
+    .takeaway-sub {
+      font-size: 22px;
+      color: var(--text-secondary);
+      max-width: 1100px;
+      line-height: 1.5;
+    }
+
+    /* ----------------------------------------------------
+       Floating Presentation Control Bar
+       ---------------------------------------------------- */
+    #bottom-control-bar {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      padding: 8px 22px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 1000;
+      opacity: 0.65;
+      transition: opacity 0.25s ease, transform 0.25s ease, background 0.2s ease;
+      color: var(--text-primary);
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4);
+    }
+    #stage-container:hover #bottom-control-bar,
+    #bottom-control-bar:hover {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-2px);
+    }
+
+    [data-theme="light"] #bottom-control-bar {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.15), 0 2px 6px rgba(15, 23, 42, 0.08);
+      color: #0f172a;
+    }
+
+    .ctrl-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+    }
+    .ctrl-btn:hover { color: var(--text-primary); background: var(--bg-surface-elevated); }
+    [data-theme="light"] .ctrl-btn {
+      color: #334155;
+    }
+    [data-theme="light"] .ctrl-btn:hover {
+      color: #0f172a;
+      background: #f1f5f9;
+    }
+
+    .ctrl-counter {
+      font-size: 14px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: var(--text-primary);
+      padding: 0 4px;
+    }
+    [data-theme="light"] .ctrl-counter {
+      color: #0f172a;
+    }
+    
+    .ctrl-badge-btn {
+      background: var(--accent-subtle);
+      color: var(--accent-primary);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .ctrl-badge-btn:hover {
+      background: var(--accent-primary);
+      color: white;
+    }
+    [data-theme="light"] .ctrl-badge-btn {
+      background: rgba(99, 102, 241, 0.12);
+      color: #4f46e5;
+      border-color: rgba(99, 102, 241, 0.35);
+    }
+    [data-theme="light"] .ctrl-badge-btn:hover {
+      background: #6366f1;
+      color: white;
+    }
+
+    /* ----------------------------------------------------
+       MODE 2: DOCS / HANDOUT REPORT VIEW (Technical Whitepaper)
+       ---------------------------------------------------- */
+    body.mode-docs {
+      overflow-y: auto !important;
+      user-select: auto !important;
+      background-color: var(--bg-presentation) !important;
+      color: var(--text-primary) !important;
+      min-height: 100vh;
+    }
+    body.mode-docs #stage-container { display: none !important; }
+    body.mode-docs #docs-view-container { display: block !important; }
+
+    #docs-view-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 40px 36px 120px 36px;
+    }
+
+    .docs-top-nav {
+      position: sticky;
+      top: 16px;
+      z-index: 500;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border-strong);
+      padding: 12px 24px;
+      border-radius: 12px;
+      margin-bottom: 40px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+    [data-theme="light"] .docs-top-nav {
+      background: rgba(255, 255, 255, 0.94);
+      border-color: var(--border-strong);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+    }
+    .docs-nav-title { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+    [data-theme="light"] .docs-nav-title { color: #0f172a; }
+    .docs-nav-actions { display: flex; gap: 12px; align-items: center; }
+    [data-theme="light"] .docs-top-nav .ctrl-btn { color: #334155; }
+    [data-theme="light"] .docs-top-nav .ctrl-btn:hover { color: #0f172a; background: #e2e8f0; }
+
+    /* Report Title Section */
+    .docs-report-header {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 36px 40px;
+      margin-bottom: 36px;
+      box-shadow: var(--shadow-slide);
+    }
+    .docs-report-badge {
+      display: inline-block;
+      padding: 6px 14px;
+      background: var(--accent-subtle);
+      color: var(--accent-primary);
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+    }
+    .docs-report-title {
+      font-size: 44px;
+      font-weight: 900;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+      margin-bottom: 18px;
+    }
+    .docs-report-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 28px;
+      font-size: 16px;
+      color: var(--text-muted);
+    }
+    .docs-report-meta strong { color: var(--text-primary); }
+
+    /* Report TOC */
+    .docs-toc-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 30px 36px;
+      margin-bottom: 48px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+    .docs-toc-title {
+      font-size: 17px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent-primary);
+      margin-bottom: 16px;
+    }
+    .docs-toc-list {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 12px 28px;
+    }
+    .docs-toc-list a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 16px;
+      display: flex; gap: 8px;
+      transition: color 0.15s ease;
+    }
+    .docs-toc-list a:hover { color: var(--accent-primary); }
+    .docs-toc-list span.num { font-family: var(--font-mono); color: var(--accent-primary); font-weight: 700; }
+
+    /* Report Article Sections */
+    .docs-section {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 40px;
+      margin-bottom: 48px;
+      scroll-margin-top: 100px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+    .docs-section-heading {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 16px;
+    }
+    .docs-section-num {
+      font-size: 20px;
+      font-family: var(--font-mono);
+      color: var(--accent-primary);
+    }
+    .docs-prose {
+      font-size: 19px;
+      line-height: 1.8;
+      color: var(--text-primary);
+      margin-bottom: 28px;
+    }
+    [data-theme="light"] .docs-prose { color: #1e293b; }
+    .docs-prose ul {
+      padding-left: 24px;
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .docs-prose li {
+      font-size: 18px;
+      line-height: 1.65;
+    }
+
+    .docs-figure-card {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 24px;
+      margin: 32px 0;
+      width: 100%;
+    }
+    .docs-figure-card .slide-canvas-card {
+      min-height: 580px;
+      height: 620px;
+    }
+    .docs-figure-card .slide-canvas-body svg {
+      width: 100% !important;
+      height: 100% !important;
+      min-height: 540px !important;
+    }
+    .docs-figure-caption {
+      font-size: 14px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 14px;
+      font-family: var(--font-mono);
+    }
+
+    /* Commentary Callout Box (Transformed from Speaker Notes) */
+    .docs-commentary-box {
+      background: var(--bg-surface-elevated);
+      border-left: 4px solid var(--accent-primary);
+      border-radius: 0 12px 12px 0;
+      padding: 24px 28px;
+      margin-top: 28px;
+      font-size: 17px;
+      line-height: 1.75;
+      color: var(--text-primary);
+    }
+    [data-theme="light"] .docs-commentary-box {
+      background: #f8fafc;
+      color: #1e293b;
+      border-color: #6366f1;
+    }
+    .docs-commentary-label {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-primary);
+      margin-bottom: 12px;
+    }
+    .docs-commentary-content {
+      white-space: pre-wrap;
+      font-size: 16px;
+    }
+
+    /* ----------------------------------------------------
+       Modals: Help & Overview
+       ---------------------------------------------------- */
+    #help-modal {
+      position: fixed; inset: 0;
+      background: rgba(2, 6, 23, 0.88);
+      backdrop-filter: blur(14px);
+      z-index: 2000;
+      display: none;
+      align-items: center; justify-content: center;
+    }
+    #help-modal.open { display: flex; }
+    .help-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 14px;
+      width: 620px;
+      max-width: 90vw;
+      padding: 30px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    .help-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 24px;
+    }
+    .help-title { font-size: 20px; font-weight: 800; }
+    .help-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      font-size: 14px;
+    }
+    .help-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 12px; background: var(--bg-surface-elevated); border-radius: 6px;
+    }
+    .kbd {
+      background: var(--bg-presentation);
+      border: 1px solid var(--border-strong);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--accent-primary);
+      font-weight: 700;
+    }
+
+    /* Overview Grid Modal */
+    #overview-modal {
+      position: fixed; inset: 0;
+      background: rgba(2, 6, 23, 0.92);
+      backdrop-filter: blur(16px);
+      z-index: 1500;
+      display: none; flex-direction: column;
+      padding: 40px 60px;
+      overflow-y: auto;
+    }
+    #overview-modal.open { display: flex; }
+    .overview-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 30px;
+    }
+    .overview-title { font-size: 26px; font-weight: 700; }
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+    .thumb-card {
+      aspect-ratio: 16 / 9;
+      background: var(--bg-surface);
+      border: 2px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 18px;
+      cursor: pointer;
+      display: flex; flex-direction: column; justify-content: space-between;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .thumb-card:hover {
+      border-color: var(--accent-primary);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
+    }
+    .thumb-card.current {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px var(--accent-subtle);
+    }
+    .thumb-num {
+      position: absolute; top: 10px; left: 14px;
+      font-size: 13px; font-weight: 700; color: var(--accent-primary); font-family: var(--font-mono);
+    }
+    .thumb-title {
+      font-size: 16px; font-weight: 700; margin-top: 20px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .thumb-cat { font-size: 12px; color: var(--text-muted); text-transform: uppercase; }
+
+    /* Blackout */
+    #black-overlay { position: fixed; inset: 0; background: black; z-index: 1200; display: none; }
+    #black-overlay.active { display: block; }
+
+    /* ----------------------------------------------------
+       Print Styles (One Slide Per Page, 100% Fit)
+       ---------------------------------------------------- */
+    /* ----------------------------------------------------
+       Print Styles (One Slide Per Page, 100% Responsive Fit, Anti-Clipping)
+       ---------------------------------------------------- */
+    @media print {
+      @page {
+        size: landscape;
+        margin: 0;
+      }
+      *, *::before, *::after {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      html, body {
+        overflow: visible !important;
+        background: #ffffff !important;
+        color: #0f172a !important;
+        width: 100% !important;
+        height: auto !important;
+      }
+      #bottom-control-bar, #overview-modal, #help-modal, #black-overlay, .docs-top-nav, .slide-canvas-toolbar {
+        display: none !important;
+      }
+
+      /* Slide Mode Printing */
+      body.mode-slide #stage-container {
+        display: block !important;
+        width: 100vw !important;
+        height: auto !important;
+        position: static !important;
+      }
+      body.mode-slide #slide-viewport {
+        transform: none !important;
+        box-shadow: none !important;
+        width: 100vw !important;
+        height: auto !important;
+        position: static !important;
+        background: transparent !important;
+      }
+      body.mode-slide .slide {
+        display: flex !important;
+        opacity: 1 !important;
+        transform: none !important;
+        position: relative !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        background: #ffffff !important;
+        color: #0f172a !important;
+        box-sizing: border-box !important;
+        padding: 32px 48px 24px 48px !important;
+        overflow: hidden !important;
+      }
+
+      /* Anti-Clipping Layout Overrides for Print */
+      body.mode-slide .slide-header {
+        margin-bottom: 14px !important;
+        padding-bottom: 10px !important;
+        border-color: #cbd5e1 !important;
+      }
+      body.mode-slide .slide-title {
+        font-size: 34px !important;
+      }
+      body.mode-slide .slide-body {
+        flex: 1 !important;
+        min-height: 0 !important;
+        height: calc(100vh - 130px) !important;
+        max-height: calc(100vh - 130px) !important;
+        overflow: hidden !important;
+      }
+      body.mode-slide .split-layout,
+      body.mode-slide .stacked-layout {
+        height: 100% !important;
+        min-height: 0 !important;
+        gap: 20px !important;
+      }
+      body.mode-slide .split-right,
+      body.mode-slide .stacked-bottom,
+      body.mode-slide .slide-full-diagram .slide-body {
+        min-height: 0 !important;
+        height: 100% !important;
+        flex: 1 !important;
+      }
+      body.mode-slide .slide-canvas-card {
+        height: 100% !important;
+        min-height: 0 !important;
+        border: 1px solid #cbd5e1 !important;
+        background: #ffffff !important;
+        box-shadow: none !important;
+      }
+      body.mode-slide .slide-canvas-body {
+        min-height: 0 !important;
+        height: 100% !important;
+        padding: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+      body.mode-slide .slide-canvas-body svg {
+        min-height: 0 !important;
+        max-height: 100% !important;
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important;
+      }
+      body.mode-slide .split-bullets li {
+        font-size: 20px !important;
+        line-height: 1.4 !important;
+        gap: 12px !important;
+      }
+      body.mode-slide .stacked-bullets li {
+        font-size: 19px !important;
+        line-height: 1.35 !important;
+      }
+      body.mode-slide .bitfield-table {
+        font-size: 15px !important;
+      }
+      body.mode-slide .bitfield-table th,
+      body.mode-slide .bitfield-table td {
+        padding: 10px 8px !important;
+        border-color: #cbd5e1 !important;
+      }
+      body.mode-slide .slide-footer {
+        height: 28px !important;
+        font-size: 13px !important;
+        border-color: #cbd5e1 !important;
+        margin-top: 8px !important;
+        padding-top: 4px !important;
+      }
+
+      /* Mermaid Universal Print Contrast */
+      .mermaid svg text,
+      .mermaid svg .node text,
+      .mermaid svg .actor text,
+      .mermaid svg text.actor,
+      .mermaid svg .label text,
+      .mermaid svg .label span,
+      .mermaid svg .messageText {
+        fill: #0f172a !important;
+        color: #0f172a !important;
+        font-weight: 700 !important;
+      }
+      .mermaid svg .node rect,
+      .mermaid svg .node circle,
+      .mermaid svg .node ellipse,
+      .mermaid svg .node polygon {
+        fill: #ffffff !important;
+        stroke: #4f46e5 !important;
+        stroke-width: 1.5px !important;
+      }
+      .mermaid svg .cluster rect {
+        fill: #f8fafc !important;
+        stroke: #94a3b8 !important;
+      }
+      .mermaid svg .actor {
+        fill: #eef2ff !important;
+        stroke: #4f46e5 !important;
+      }
+      .mermaid svg .edgePath path {
+        stroke: #4f46e5 !important;
+        stroke-width: 2px !important;
+      }
+      .mermaid svg .marker {
+        fill: #4f46e5 !important;
+        stroke: #4f46e5 !important;
+      }
+
+      /* Docs Mode Printing */
+      body.mode-docs {
+        background: #ffffff !important;
+        color: #0f172a !important;
+      }
+      body.mode-docs #docs-view-container {
+        display: block !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+      }
+      body.mode-docs .docs-report-header,
+      body.mode-docs .docs-toc-card,
+      body.mode-docs .docs-section {
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        margin-bottom: 24px !important;
+      }
+      body.mode-docs .docs-figure-card {
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      body.mode-docs .docs-figure-card .slide-canvas-card {
+        min-height: 420px !important;
+        height: auto !important;
+        border: none !important;
+      }
+      body.mode-docs .docs-figure-card .slide-canvas-body svg {
+        max-height: 460px !important;
+        min-height: 0 !important;
+        object-fit: contain !important;
+      }
+      body.mode-docs .docs-commentary-box {
+        background: #f8fafc !important;
+        border-color: #4f46e5 !important;
+        color: #1e293b !important;
+      }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    if (typeof d3 === 'undefined') {
+      document.write('<script src="assets/vendor/d3.min.js"><\/script>');
+    }
+    if (typeof mermaid === 'undefined') {
+      document.write('<script src="assets/vendor/mermaid.min.js"><\/script>');
+    }
+  </script>
+</head>
+<body class="mode-slide">
+
+  <!-- ====================================================
+       1. PRESENTATION STAGE (Slide View)
+       ==================================================== -->
+  <div id="stage-container">
+    <div id="slide-viewport">
+      <!-- Slides dynamically rendered here -->
+    </div>
+
+    <!-- Floating Controller -->
+    <div id="bottom-control-bar">
+      <button class="ctrl-btn" id="btn-prev" title="이전 슬라이드 (← / PageUp)">이전</button>
+      <span class="ctrl-counter" id="slide-counter">1 / 1</span>
+      <button class="ctrl-btn" id="btn-next" title="다음 슬라이드 (→ / Space)">다음</button>
+      <div style="width: 1px; height: 16px; background: var(--border-strong);"></div>
+      <button class="ctrl-badge-btn" id="btn-toggle-docs" title="문서/핸드아웃 모드 (D 키)">Docs 모드</button>
+      <button class="ctrl-btn" id="btn-overview" title="전체 개요 (O / Esc)">개요</button>
+      <button class="ctrl-btn" id="btn-presenter" title="발표자 모드 (P)">발표자 뷰</button>
+      <button class="ctrl-btn" id="btn-theme" title="테마 변경 (T)">테마</button>
+      <button class="ctrl-btn" id="btn-fullscreen" title="전체화면 (F)">전체화면</button>
+      <button class="ctrl-btn" id="btn-print" title="PDF 인쇄">인쇄</button>
+      <button class="ctrl-btn" id="btn-help" title="단축키 안내 (? 또는 Shift+/)">도움말</button>
+    </div>
+  </div>
+
+  <!-- ====================================================
+       2. DOCS / HANDOUT REPORT VIEW (Technical Report View)
+       ==================================================== -->
+  <div id="docs-view-container">
+    <div class="docs-top-nav">
+      <div class="docs-nav-title" id="docs-nav-title">Technical Handout & Seminar Report</div>
+      <div class="docs-nav-actions">
+        <button class="ctrl-badge-btn" id="btn-back-to-slides">슬라이드 쇼 복귀 (D)</button>
+        <button class="slide-canvas-btn" id="btn-docs-theme">테마 변경</button>
+        <button class="slide-canvas-btn" onclick="window.print()">PDF 인쇄</button>
+      </div>
+    </div>
+    <div id="docs-content-area"></div>
+  </div>
+
+  <!-- ====================================================
+       3. MODALS (Help, Overview, Blackout)
+       ==================================================== -->
+  <!-- Help Modal -->
+  <div id="help-modal">
+    <div class="help-card">
+      <div class="help-header">
+        <div class="help-title">프레젠테이션 키보드 단축키</div>
+        <button class="slide-canvas-btn" id="btn-close-help">닫기 (Esc)</button>
+      </div>
+      <div class="help-grid">
+        <div class="help-item"><span>다음 슬라이드</span><span class="kbd">Space / → / PgDn</span></div>
+        <div class="help-item"><span>이전 슬라이드</span><span class="kbd">← / PgUp</span></div>
+        <div class="help-item"><span>Docs 모드 (기술 문서 뷰)</span><span class="kbd">D</span></div>
+        <div class="help-item"><span>발표자 모드 (대본/타이머)</span><span class="kbd">P</span></div>
+        <div class="help-item"><span>전체 슬라이드 오버뷰</span><span class="kbd">O / Esc</span></div>
+        <div class="help-item"><span>전체화면 토글</span><span class="kbd">F</span></div>
+        <div class="help-item"><span>화면 일시 암전 (Blackout)</span><span class="kbd">B</span></div>
+        <div class="help-item"><span>다크 / 라이트 테마</span><span class="kbd">T</span></div>
+        <div class="help-item"><span>처음 / 마지막 슬라이드</span><span class="kbd">Home / End</span></div>
+        <div class="help-item"><span>단축키 도움말</span><span class="kbd">? (Shift + /)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overview Grid Modal -->
+  <div id="overview-modal">
+    <div class="overview-header">
+      <div class="overview-title">전체 슬라이드 개요 (Slide Overview)</div>
+      <button class="slide-canvas-btn" id="btn-close-overview">닫기 (Esc)</button>
+    </div>
+    <div class="overview-grid" id="overview-grid-container"></div>
+  </div>
+
+  <!-- Blackout Overlay -->
+  <div id="black-overlay"></div>
+
+  <!-- ====================================================
+       4. EMBEDDED SLIDE DATA
+       ==================================================== -->
+  <script type="application/json" id="slides-data">
+  {
+    "title": "Default Seminar Slides",
+    "slides": []
+  }
+  </script>
+
+  <!-- ====================================================
+       5. SLIDE & DOCS ENGINE JAVASCRIPT
+       ==================================================== -->
+  <script>
+    let presentationData = null;
+    let currentSlideIdx = 0;
+    let isBlackout = false;
+    let isDocsMode = false;
+    let presenterChannel = null;
+    const renderedMermaidSet = new Set();
+
+    // 1. Data Loading
+    try {
+      const dataEl = document.getElementById('slides-data');
+      presentationData = JSON.parse(dataEl.textContent);
+      document.title = presentationData.title || "Seminar Presentation";
+      document.getElementById('docs-nav-title').textContent = presentationData.title || "Technical Report";
+    } catch (e) {
+      console.error("Failed to parse slides data:", e);
+    }
+
+    const viewport = document.getElementById('slide-viewport');
+    const counterEl = document.getElementById('slide-counter');
+    const overviewModal = document.getElementById('overview-modal');
+    const overviewGrid = document.getElementById('overview-grid-container');
+    const helpModal = document.getElementById('help-modal');
+    const blackOverlay = document.getElementById('black-overlay');
+    const docsContentArea = document.getElementById('docs-content-area');
+
+    try {
+      presenterChannel = new BroadcastChannel('seminar_slides_sync');
+      presenterChannel.onmessage = (event) => {
+        if (event.data && typeof event.data.slideIdx === 'number') {
+          goToSlide(event.data.slideIdx, false);
+        }
+      };
+    } catch(e) {}
+
+    // 16:9 Viewport Scaler
+    function scaleViewport() {
+      if (isDocsMode) return;
+      const padding = 20;
+      const availW = window.innerWidth - padding * 2;
+      const availH = window.innerHeight - padding * 2;
+      const scale = Math.min(availW / 1920, availH / 1080);
+      viewport.style.transform = `scale(${scale})`;
+    }
+    window.addEventListener('resize', scaleViewport);
+
+    // Helper: Security Classification Badge (Fix: Always prepend to slide)
+    function getClassificationBadgeHtml() {
+      const cls = presentationData?.classification;
+      if (!cls || !cls.trim()) return '';
+      const normalized = cls.trim().toUpperCase();
+      let typeClass = 'classification-internal';
+      if (normalized.includes('CONFIDENTIAL') || normalized.includes('SECRET')) {
+        typeClass = 'classification-confidential';
+      } else if (normalized.includes('PUBLIC')) {
+        typeClass = 'classification-public';
+      } else if (normalized.includes('RESTRICTED')) {
+        typeClass = 'classification-restricted';
+      }
+      return `<div class="slide-classification ${typeClass}">${normalized}</div>`;
+    }
+
+    // Render Presentation Mode
+    function renderSlides() {
+      if (!presentationData || !presentationData.slides) return;
+      viewport.innerHTML = '';
+      overviewGrid.innerHTML = '';
+
+      const classBadge = getClassificationBadgeHtml();
+
+      presentationData.slides.forEach((s, idx) => {
+        const slideEl = document.createElement('div');
+        slideEl.className = `slide slide-${s.type || 'split'}`;
+        slideEl.id = `slide-${idx}`;
+
+        let innerContent = '';
+
+        if (s.type === 'cover') {
+          innerContent = `
+            ${classBadge}
+            ${s.badge ? `<div class="cover-badge">${s.badge}</div>` : ''}
+            <h1 class="cover-title">${s.title}</h1>
+            <div class="cover-subtitle">${s.subtitle || ''}</div>
+            <div class="cover-meta">
+              <div>발표자: <strong>${presentationData.presenter?.name || 'Presenter'}</strong></div>
+              <div>소속: <strong>${presentationData.presenter?.affiliation || ''}</strong></div>
+              <div>일시: <strong>${presentationData.presenter?.date || ''}</strong></div>
+            </div>
+          `;
+        } else if (s.type === 'agenda') {
+          innerContent = `
+            ${classBadge}
+            <div class="slide-header">
+              <div>
+                <div class="slide-category">${s.category || 'Roadmap'}</div>
+                <div class="slide-title">${s.heading}</div>
+              </div>
+            </div>
+            <div class="slide-body">
+              <div class="agenda-grid">
+                ${(s.items || []).map((item, i) => `
+                  <div class="agenda-card">
+                    <div class="agenda-num">${i + 1}</div>
+                    <div class="agenda-content">
+                      <h3>${item.title}</h3>
+                      <p>${item.desc || ''}</p>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+            <div class="slide-footer">
+              <span>${presentationData.title}</span>
+              <span>${idx + 1} / ${presentationData.slides.length}</span>
+            </div>
+          `;
+        } else if (s.type === 'takeaway') {
+          innerContent = `
+            ${classBadge}
+            <div class="takeaway-quote">"${s.quote}"</div>
+            ${s.subtitle ? `<div class="takeaway-sub">${s.subtitle}</div>` : ''}
+          `;
+        } else {
+          // Standard Slide: Supports 'split' (horizontal) or 'stacked' (vertical)
+          const layoutMode = s.layout || (s.visual?.type === 'mermaid' && (s.visual.content.includes('graph LR') || s.visual.content.includes('sequenceDiagram')) ? 'stacked' : 'split');
+
+          if (layoutMode === 'stacked') {
+            innerContent = `
+              ${classBadge}
+              <div class="slide-header">
+                <div>
+                  <div class="slide-category">${s.category || 'Topic'}</div>
+                  <div class="slide-title">${s.heading}</div>
+                </div>
+              </div>
+              <div class="slide-body">
+                <div class="stacked-layout">
+                  ${s.bullets ? `
+                    <div class="stacked-top">
+                      <ul class="stacked-bullets">
+                        ${s.bullets.map(b => `<li>${b}</li>`).join('')}
+                      </ul>
+                    </div>
+                  ` : ''}
+                  <div class="stacked-bottom">
+                    ${s.visual ? renderVisualBlock(s.visual, idx) : ''}
+                  </div>
+                </div>
+              </div>
+              <div class="slide-footer">
+                <span>${presentationData.title}</span>
+                <span>${idx + 1} / ${presentationData.slides.length}</span>
+              </div>
+            `;
+          } else {
+            innerContent = `
+              ${classBadge}
+              <div class="slide-header">
+                <div>
+                  <div class="slide-category">${s.category || 'Topic'}</div>
+                  <div class="slide-title">${s.heading}</div>
+                </div>
+              </div>
+              <div class="slide-body">
+                <div class="split-layout">
+                  ${s.bullets ? `
+                    <div class="split-left">
+                      <ul class="split-bullets">
+                        ${s.bullets.map(b => `<li>${b}</li>`).join('')}
+                      </ul>
+                    </div>
+                  ` : ''}
+                  <div class="split-right">
+                    ${s.visual ? renderVisualBlock(s.visual, idx) : ''}
+                  </div>
+                </div>
+              </div>
+              <div class="slide-footer">
+                <span>${presentationData.title}</span>
+                <span>${idx + 1} / ${presentationData.slides.length}</span>
+              </div>
+            `;
+          }
+        }
+
+        slideEl.innerHTML = innerContent;
+        viewport.appendChild(slideEl);
+
+        // Overview Thumbnails
+        const thumb = document.createElement('div');
+        thumb.className = `thumb-card ${idx === 0 ? 'current' : ''}`;
+        thumb.id = `thumb-${idx}`;
+        thumb.innerHTML = `
+          <div class="thumb-num">#${idx + 1}</div>
+          <div class="thumb-cat">${s.category || s.type || 'Slide'}</div>
+          <div class="thumb-title">${s.heading || s.title || `Slide ${idx + 1}`}</div>
+        `;
+        thumb.addEventListener('click', () => {
+          goToSlide(idx);
+          closeOverview();
+        });
+        overviewGrid.appendChild(thumb);
+      });
+
+      goToSlide(0);
+      scaleViewport();
+    }
+
+    // Render Mode 2: Real Technical Handout Report
+    function renderDocsView() {
+      if (!presentationData || !presentationData.slides) return;
+      docsContentArea.innerHTML = '';
+
+      const classBadge = getClassificationBadgeHtml();
+
+      // 1. Report Header Section
+      const headerEl = document.createElement('div');
+      headerEl.className = 'docs-report-header';
+      headerEl.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <div class="docs-report-badge">TECHNICAL HANDOUT & ARCHITECTURE REPORT</div>
+          ${classBadge ? `<div style="position:static; transform:none;">${classBadge}</div>` : ''}
+        </div>
+        <h1 class="docs-report-title">${presentationData.title}</h1>
+        <div class="docs-report-meta">
+          <span>발표자: <strong>${presentationData.presenter?.name || ''}</strong></span>
+          <span>소속: <strong>${presentationData.presenter?.affiliation || ''}</strong></span>
+          <span>일시: <strong>${presentationData.presenter?.date || ''}</strong></span>
+        </div>
+      `;
+      docsContentArea.appendChild(headerEl);
+
+      // 2. Table of Contents
+      const tocCard = document.createElement('div');
+      tocCard.className = 'docs-toc-card';
+      const nonCoverSlides = presentationData.slides.filter(s => s.type !== 'cover');
+      tocCard.innerHTML = `
+        <div class="docs-toc-title">목차 (Table of Contents)</div>
+        <ul class="docs-toc-list">
+          ${nonCoverSlides.map((s, idx) => `
+            <li>
+              <a href="#docs-sec-${idx}">
+                <span class="num">${String(idx + 1).padStart(2, '0')}.</span>
+                <span>${s.heading || s.title || 'Section'}</span>
+              </a>
+            </li>
+          `).join('')}
+        </ul>
+      `;
+      docsContentArea.appendChild(tocCard);
+
+      // 3. Technical Report Article Sections
+      nonCoverSlides.forEach((s, idx) => {
+        const sec = document.createElement('article');
+        sec.className = 'docs-section';
+        sec.id = `docs-sec-${idx}`;
+
+        let secHtml = `
+          <h2 class="docs-section-heading">
+            <span class="docs-section-num">Section ${idx + 1}.</span>
+            <span>${s.heading || s.title || ''}</span>
+          </h2>
+          <div class="docs-prose">
+        `;
+
+        if (s.bullets && s.bullets.length > 0) {
+          secHtml += `<ul>${s.bullets.map(b => `<li>${b}</li>`).join('')}</ul>`;
+        }
+
+        if (s.items && s.items.length > 0) {
+          secHtml += `
+            <div class="agenda-grid" style="grid-template-columns: 1fr 1fr; margin-top: 16px;">
+              ${s.items.map((it, i) => `
+                <div class="agenda-card" style="padding: 20px;">
+                  <div class="agenda-num" style="width: 36px; height: 36px; font-size: 16px;">${i + 1}</div>
+                  <div><strong style="font-size: 17px;">${it.title}</strong><p style="font-size: 14px; margin-top: 4px;">${it.desc}</p></div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        secHtml += `</div>`;
+
+        // Large High-Def Diagram / Visual Figure Block
+        if (s.visual) {
+          secHtml += `
+            <div class="docs-figure-card">
+              ${renderVisualBlock(s.visual, `docs-${idx}`)}
+              <div class="docs-figure-caption">Figure ${idx + 1}. ${s.heading || 'Architecture Diagram'}</div>
+            </div>
+          `;
+        }
+
+        // Detailed Engineering Commentary (Speaker Notes transformed into Technical Documentation)
+        if (s.notes) {
+          secHtml += `
+            <div class="docs-commentary-box">
+              <div class="docs-commentary-label">심층 기술 해설 및 실무 발표 가이드 (Engineering Commentary)</div>
+              <div class="docs-commentary-content">${s.notes}</div>
+            </div>
+          `;
+        }
+
+        sec.innerHTML = secHtml;
+        docsContentArea.appendChild(sec);
+      });
+    }
+
+    // Helper: Visual Block Generator (Safe Data Source Caching)
+    function renderVisualBlock(visual, idSuffix) {
+      if (visual.type === 'mermaid') {
+        const encodedCode = encodeURIComponent(visual.content);
+        return `
+          <div class="slide-canvas-card">
+            <div class="slide-canvas-toolbar">
+              <span>아키텍처 다이어그램 (고해상도 캔버스)</span>
+              <button class="slide-canvas-btn" onclick="exportSlideSVG('mermaid-target-${idSuffix}')">SVG 저장</button>
+            </div>
+            <div class="slide-canvas-body">
+              <div class="mermaid-target" id="mermaid-target-${idSuffix}" data-mermaid-source="${encodedCode}">
+                <div style="color:var(--text-muted); font-size:16px;">다이어그램 로딩 중...</div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (visual.type === 'bitfield') {
+        return `
+          <div class="bitfield-table-wrap">
+            <table class="bitfield-table">
+              <thead><tr>${visual.headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+              <tbody>
+                ${visual.rows.map(row => `
+                  <tr>${row.map(cell => `<td class="${cell.highlight ? 'highlight' : ''}">${cell.text}</td>`).join('')}</tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      } else if (visual.type === 'html') {
+        return visual.content;
+      }
+      return '';
+    }
+
+    // High-Resolution Mermaid Rendering Engine (Immune to theme toggle / DOM teardown)
+    async function renderMermaidInElement(container, forceRerender = false) {
+      if (typeof mermaid === 'undefined') return;
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: 'loose',
+        theme: isDark ? 'dark' : 'neutral',
+        themeVariables: {
+          primaryColor: '#6366f1',
+          primaryTextColor: isDark ? '#f8fafc' : '#0f172a',
+          primaryBorderColor: '#6366f1',
+          lineColor: isDark ? '#818cf8' : '#6366f1',
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '22px'
+        }
+      });
+
+      const targets = container.querySelectorAll('.mermaid-target');
+      for (let i = 0; i < targets.length; i++) {
+        const el = targets[i];
+        if (!forceRerender && el.querySelector('svg')) continue;
+        const source = decodeURIComponent(el.getAttribute('data-mermaid-source') || '');
+        if (!source.trim()) continue;
+
+        const uniqueSvgId = 'mmd-svg-' + Math.random().toString(36).substring(2, 9) + '-' + i;
+        try {
+          const { svg } = await mermaid.render(uniqueSvgId, source);
+          el.innerHTML = svg;
+          const svgEl = el.querySelector('svg');
+          if (svgEl) {
+            svgEl.removeAttribute('height');
+            svgEl.removeAttribute('width');
+            svgEl.style.width = '100%';
+            svgEl.style.height = '100%';
+            svgEl.style.maxWidth = '100%';
+            svgEl.style.minHeight = '520px';
+          }
+        } catch(e) {
+          console.warn("Mermaid render error for target:", e);
+        }
+      }
+    }
+
+    // Slide Navigation
+    async function goToSlide(idx, broadcast = true) {
+      if (!presentationData || !presentationData.slides) return;
+      if (idx < 0) idx = 0;
+      if (idx >= presentationData.slides.length) idx = presentationData.slides.length - 1;
+
+      const slides = document.querySelectorAll('.slide');
+      for (let i = 0; i < slides.length; i++) {
+        const s = slides[i];
+        s.classList.toggle('active', i === idx);
+        if (i === idx) {
+          await renderMermaidInElement(s);
+        }
+      }
+
+      document.querySelectorAll('.thumb-card').forEach((t, i) => {
+        t.classList.toggle('current', i === idx);
+      });
+
+      currentSlideIdx = idx;
+      counterEl.textContent = `${idx + 1} / ${presentationData.slides.length}`;
+
+      if (broadcast && presenterChannel) {
+        presenterChannel.postMessage({ slideIdx: idx });
+      }
+    }
+
+    function nextSlide() { goToSlide(currentSlideIdx + 1); }
+    function prevSlide() { goToSlide(currentSlideIdx - 1); }
+
+    // Toggle Docs Mode
+    async function toggleDocsMode(forceDocs = null) {
+      isDocsMode = forceDocs !== null ? forceDocs : !isDocsMode;
+      document.body.className = isDocsMode ? 'mode-docs' : 'mode-slide';
+
+      if (isDocsMode) {
+        renderDocsView();
+        await renderMermaidInElement(docsContentArea, true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        scaleViewport();
+        goToSlide(currentSlideIdx);
+      }
+    }
+
+    async function toggleTheme() {
+      const html = document.documentElement;
+      const nextTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', nextTheme);
+      renderedMermaidSet.clear();
+      if (isDocsMode) {
+        await renderMermaidInElement(docsContentArea, true);
+      } else {
+        const activeSlide = document.querySelector('.slide.active');
+        if (activeSlide) await renderMermaidInElement(activeSlide, true);
+      }
+    }
+
+    // Modals
+    function toggleOverview() { overviewModal.classList.toggle('open'); }
+    function closeOverview() { overviewModal.classList.remove('open'); }
+    function toggleHelp() { helpModal.classList.toggle('open'); }
+    function closeHelp() { helpModal.classList.remove('open'); }
+    function toggleBlackout() {
+      isBlackout = !isBlackout;
+      blackOverlay.classList.toggle('active', isBlackout);
+    }
+
+    // Presenter Mode (Popup)
+    function openPresenterMode() {
+      const presenterWin = window.open('', 'PresenterMode', 'width=1280,height=800');
+      if (!presenterWin) {
+        alert("팝업 차단을 해제해 주세요.");
+        return;
+      }
+
+      presenterWin.document.write(`
+        <!DOCTYPE html>
+        <html lang="ko">
+        <head>
+          <title>Presenter View - ${presentationData.title}</title>
+          <style>
+            body { margin:0; font-family: 'Inter', sans-serif; background: #020617; color: #f8fafc; }
+            .p-container { display: grid; grid-template-columns: 1fr 1fr; height: 100vh; }
+            .p-left { padding: 24px; border-right: 1px solid #334155; display: flex; flex-direction: column; gap: 16px; }
+            .p-right { padding: 24px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
+            .p-box { background: #111827; border: 1px solid #1e293b; border-radius: 10px; padding: 20px; }
+            .timer { font-size: 48px; font-weight: 800; font-family: monospace; color: #10b981; }
+            .slide-title { font-size: 24px; font-weight: 700; color: #6366f1; margin-bottom: 12px; }
+            .notes-content { font-size: 18px; line-height: 1.6; color: #cbd5e1; white-space: pre-wrap; }
+            .btn { background: #6366f1; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 15px; }
+          </style>
+        </head>
+        <body>
+          <div class="p-container">
+            <div class="p-left">
+              <div class="p-box" style="flex:1;">
+                <div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">현재 슬라이드 (<span id="p-idx">1</span>)</div>
+                <div class="slide-title" id="p-curr-title">Title</div>
+                <div id="p-curr-bullets" style="font-size:16px; line-height:1.5;"></div>
+              </div>
+              <div class="p-box" style="height:140px;">
+                <div style="font-size:13px; color:#94a3b8; margin-bottom:4px;">다음 슬라이드 미리보기</div>
+                <div id="p-next-title" style="font-size:17px; font-weight:600; color:#cbd5e1;">Next Title</div>
+              </div>
+            </div>
+            <div class="p-right">
+              <div class="p-box" style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <div style="font-size:13px; color:#94a3b8;">발표 경과 시간</div>
+                  <div class="timer" id="p-timer">00:00:00</div>
+                </div>
+                <button class="btn" id="p-timer-reset">리셋</button>
+              </div>
+              <div class="p-box" style="flex:1;">
+                <div style="font-size:13px; color:#6366f1; font-weight:700; margin-bottom:8px;">발표자 대본 & 노트 (SPEAKER NOTES)</div>
+                <div class="notes-content" id="p-notes">노트가 없습니다.</div>
+              </div>
+            </div>
+          </div>
+          <script>
+            let currentIdx = 0;
+            const channel = new BroadcastChannel('seminar_slides_sync');
+            let startTime = Date.now();
+            
+            setInterval(() => {
+              const diff = Math.floor((Date.now() - startTime) / 1000);
+              const hrs = String(Math.floor(diff / 3600)).padStart(2, '0');
+              const mins = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+              const secs = String(diff % 60).padStart(2, '0');
+              document.getElementById('p-timer').textContent = \`\${hrs}:\${mins}:\${secs}\`;
+            }, 1000);
+
+            document.getElementById('p-timer-reset').onclick = () => { startTime = Date.now(); };
+
+            const slides = ${JSON.stringify(presentationData.slides)};
+
+            function updateUI(idx) {
+              currentIdx = idx;
+              const s = slides[idx] || {};
+              const next = slides[idx + 1] || {};
+              document.getElementById('p-idx').textContent = (idx + 1) + ' / ' + slides.length;
+              document.getElementById('p-curr-title').textContent = s.heading || s.title || '';
+              document.getElementById('p-curr-bullets').innerHTML = (s.bullets || []).map(b => '• ' + b).join('<br/>');
+              document.getElementById('p-next-title').textContent = next.heading || next.title || '(마지막 슬라이드)';
+              document.getElementById('p-notes').textContent = s.notes || '이 슬라이드에는 등록된 발표자 노트가 없습니다.';
+            }
+
+            channel.onmessage = (e) => {
+              if (e.data && typeof e.data.slideIdx === 'number') {
+                updateUI(e.data.slideIdx);
+              }
+            };
+            updateUI(${currentSlideIdx});
+
+            window.addEventListener('keydown', (e) => {
+              if (['ArrowRight', 'Space', 'PageDown'].includes(e.code)) {
+                channel.postMessage({ slideIdx: currentIdx + 1 });
+                updateUI(Math.min(currentIdx + 1, slides.length - 1));
+              } else if (['ArrowLeft', 'PageUp'].includes(e.code)) {
+                channel.postMessage({ slideIdx: currentIdx - 1 });
+                updateUI(Math.max(currentIdx - 1, 0));
+              }
+            });
+          <\/script>
+        </body>
+        </html>
+      `);
+    }
+
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      if (overviewModal.classList.contains('open')) {
+        if (e.key === 'Escape' || e.key === 'o' || e.key === 'O') closeOverview();
+        return;
+      }
+      if (helpModal.classList.contains('open')) {
+        if (e.key === 'Escape' || e.key === '?') closeHelp();
+        return;
+      }
+
+      if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
+        e.preventDefault();
+        toggleHelp();
+        return;
+      }
+
+      if (e.key === 'd' || e.key === 'D') {
+        toggleDocsMode();
+        return;
+      }
+
+      if (isDocsMode) {
+        if (e.key === 't' || e.key === 'T') toggleTheme();
+        return;
+      }
+
+      switch (e.key) {
+        case 'ArrowRight':
+        case ' ':
+        case 'PageDown':
+        case 'l':
+        case 'L':
+          nextSlide();
+          break;
+        case 'ArrowLeft':
+        case 'PageUp':
+        case 'h':
+        case 'H':
+          prevSlide();
+          break;
+        case 'Home':
+          goToSlide(0);
+          break;
+        case 'End':
+          goToSlide(presentationData.slides.length - 1);
+          break;
+        case 'f':
+        case 'F':
+          if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+          else document.exitFullscreen();
+          break;
+        case 'o':
+        case 'O':
+          toggleOverview();
+          break;
+        case 'b':
+        case 'B':
+          toggleBlackout();
+          break;
+        case 'p':
+        case 'P':
+          openPresenterMode();
+          break;
+        case 't':
+        case 'T':
+          toggleTheme();
+          break;
+      }
+    });
+
+    // Button Listeners
+    document.getElementById('btn-next').onclick = nextSlide;
+    document.getElementById('btn-prev').onclick = prevSlide;
+    document.getElementById('btn-overview').onclick = toggleOverview;
+    document.getElementById('btn-close-overview').onclick = closeOverview;
+    // High-Fidelity Print Pre-rendering Engine
+    async function prepareForPrint() {
+      const allSlides = document.querySelectorAll('.slide');
+      for (let i = 0; i < allSlides.length; i++) {
+        await renderMermaidInElement(allSlides[i], false);
+      }
+      if (docsContentArea) {
+        await renderMermaidInElement(docsContentArea, false);
+      }
+    }
+
+    window.addEventListener('beforeprint', async () => {
+      await prepareForPrint();
+    });
+
+    document.getElementById('btn-print').onclick = async () => {
+      const btn = document.getElementById('btn-print');
+      const originalText = btn.textContent;
+      btn.textContent = '준비 중...';
+      await prepareForPrint();
+      btn.textContent = originalText;
+      window.print();
+    };
+    document.getElementById('btn-toggle-docs').onclick = () => toggleDocsMode(true);
+    document.getElementById('btn-back-to-slides').onclick = () => toggleDocsMode(false);
+    document.getElementById('btn-docs-theme').onclick = toggleTheme;
+    document.getElementById('btn-help').onclick = toggleHelp;
+    document.getElementById('btn-close-help').onclick = closeHelp;
+    document.getElementById('btn-fullscreen').onclick = () => {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    };
+
+    // SVG Export
+    window.exportSlideSVG = function(targetId) {
+      const targetEl = document.getElementById(targetId) || document.querySelector('.slide.active .mermaid-target') || document.querySelector('.docs-section .mermaid-target');
+      const svg = targetEl ? targetEl.querySelector('svg') : (document.querySelector('.slide.active svg') || document.querySelector('.docs-section svg'));
+      if (!svg) {
+        alert("다운로드 가능한 SVG 다이어그램이 없습니다.");
+        return;
+      }
+      const serializer = new XMLSerializer();
+      const source = serializer.serializeToString(svg);
+      const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `diagram-${Date.now()}.svg`;
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderSlides();
+    });
+  </script>
+</body>
+</html>

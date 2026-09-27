@@ -17,6 +17,7 @@
 | 스킬 / 도구명 | 위치 링크 | 설명 | 지원 환경 |
 | :--- | :--- | :--- | :--- |
 | **study-material-generator** | [`skills/study-material-generator/`](./skills/study-material-generator/SKILL.md) | 표준/논문 기반의 기술 주제를 깊이 있게 학습·발표할 수 있는 자급자족형(Single-file) HTML 스터디 문서 생성기 | Claude, Codex, Antigravity |
+| **seminar-material-generator** | [`skills/seminar-material-generator/`](./skills/seminar-material-generator/SKILL.md) | 학회, 기술 컨퍼런스, 사내 세미나 발표를 위한 16:9 와이드스크린 반응형 웹 슬라이드 덱(Presentation Deck) 생성기 | Claude, Codex, Antigravity |
 
 ---
 
@@ -36,10 +37,29 @@
 - **사용 방법**:
   - 에이전트에게 주제와 함께 요청:
     > "QUIC 프로토콜에 대해 study-material-generator 스킬을 사용해서 스터디 자료 만들어줘."
-  - 폐쇄망/보안망용 결과물이 필요한 경우:
-    > "오프라인/폐쇄망용 번들도 같이 만들어줘."
-  - 에이전트는 [`SKILL.md`](./skills/study-material-generator/SKILL.md) 및 `references/` 가이드를 먼저 읽고 표준 템플릿(`assets/template.html`)을 기반으로 완성된 `study.html`을 생성합니다.
-  - 대규모 주제(3개 이상 챕터)의 경우 토큰 초과 방지를 위해 **골격 생성 → 챕터별 순차 생성(Chunking) → 용어집/각주 최종 연결**의 점진적 워크플로우를 따릅니다.
+
+---
+
+### 📖 스킬 상세 안내: `seminar-material-generator`
+
+- **개요**: 학회, 테크 컨퍼런스, 세미나를 위한 **16:9 와이드스크린 반응형 프레젠테이션 슬라이드 덱(`slides.html`)**을 생성합니다. `study-material-generator`의 디자인 토큰과 UI 스타일을 100% 계승하여 시각적 일관성을 제공합니다.
+- **주요 기능**:
+  - **16:9 가상 뷰포트 반응형 스케일러**: 어떤 해상도(FHD, 4K, 빔프로젝터 XGA)에서도 비율 왜곡 없이 화면 중앙에 자동 정렬
+  - **도표 배치 다형성 (`split` 좌우 vs `stacked` 상하)**: 다이어그램 형태(시퀀스/가로 파이프라인 ➔ 상하, 세로 흐름도 ➔ 좌우)에 맞춰 레이아웃을 자동 지정하고 도표 크기/가독성 극대화
+  - **엔지니어링 핸드아웃 문서 뷰 (Docs Mode, `D` 키)**: 목차(TOC) 트리, 서술형 문단, 대형 다이어그램 뷰, 상세 엔지니어링 해설 블록으로 구성된 정식 기술 백서 모드 및 라이트/다크 테마 토글 지원
+  - **발표자 모드 (Presenter View, `P` 키)**: 듀얼 모니터용 팝업 창 지원 (현재/다음 슬라이드 미리보기, 발표자 대본/스피치 노트, 경과 시간 타이머 동기화)
+  - **보안 등급 배지 고정 지원**: `CONFIDENTIAL`, `INTERNAL USE ONLY`, `PUBLIC` 등 슬라이드 상단 및 핸드아웃 헤더에 보안 분류 표기
+  - **전문성 타이포그래피 (이모지 배제)**: 학술·기술 세미나의 품격에 맞춰 본문 및 UI 전반에서 이모지를 배제하고 정갈한 뱃지와 타이포그래피 적용
+  - **오버뷰 그리드 모드 (`O` 또는 `Esc` 키)**: 전체 슬라이드 썸네일 그리드 조망 및 빠른 점프
+  - **무대 제어 인터랙션**: 단축키 도움말(`?` 또는 `Shift + /`), 화면 일시 암전(`B` 키), 전체화면(`F` 키), 다크/라이트 테마(`T` 키)
+  - **시각적 요소 통합**: Mermaid 아키텍처 다이어그램(동적 렌더링 및 SVG 다운로드 지원), 패킷 비트필드 표(`.bitfield-table`), 신택스 하이라이팅
+  - **PDF 인쇄 최적화 (`Ctrl + P`)**: `@media print` 1페이지 1슬라이드 100% 핏팅으로 잘림 없는 16:9 고해상도 PDF 슬라이드 출력
+  - **CLI 검증 도구 내장**: `python skills/seminar-material-generator/scripts/validate-slides.py <파일>`로 슬라이드 스키마, 발표자 노트(notes), 예상 발표 시간 자동 검증
+  - **오프라인 단일 파일 번들러**: `python skills/seminar-material-generator/scripts/bundle-offline.py <파일>`로 외부망 연결 없는 완전 독립 슬라이드 덱(`slides-offline.html`) 즉시 생성
+- **사용 방법**:
+  - 에이전트에게 주제와 함께 요청:
+    > "WebRTC, gRPC, Zenoh 주제에 대해 seminar-material-generator 스킬로 발표 슬라이드 덱 만들어줘."
+
 
 
 
