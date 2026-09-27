@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[문서 제목을 여기에]</title>
+<!-- Fonts: Pretendard Variable (KR+Latin, OFL) + JetBrains Mono (code) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<style>
+/* ============ DESIGN TOKENS (see references/design-tokens.md) ============ */
+:root{
+  --primary:#141414; --accent:#0066ff;
+  --canvas:#ffffff; --canvas-soft:#f3f3f3; --field:#f0f0f0;
+  --hairline-soft:#f0f0f0; --hairline:#e0e0e0;
+  --ink:#141414; --ink-soft:#262626; --muted:#707070; --faint:#adadad;
+  --on-primary:#ffffff; --code-bg:#f0f0f0;
+  --ok:#009E73; --warn:#E69F00; --bad:#D55E00;
+  --font-sans:"Pretendard Variable",Pretendard,-apple-system,"Noto Sans KR","Malgun Gothic",sans-serif;
+  --font-mono:"JetBrains Mono","D2Coding","Courier New",monospace;
+}
+:root[data-theme="dark"]{
+  --primary:#ffffff; --accent:#0066ff;
+  --canvas:#0a0a0a; --canvas-soft:#1a1a1a; --field:#1e1e1e; --raised:#2e2e2e;
+  --hairline-soft:#262626; --hairline:#333333;
+  --ink:#ffffff; --ink-soft:#e2e2e2; --muted:#adadad; --faint:#707070;
+  --on-primary:#141414; --code-bg:#1e1e1e;
+  --ok:#3DDC97; --warn:#F5B942; --bad:#E8734A;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--canvas);color:var(--ink);font-family:var(--font-sans);}
+body{font-size:16px;font-weight:450;line-height:1.6;}
+h1,h2,h3{font-weight:650;line-height:1.15;margin:0 0 12px;}
+h1{font-size:32px;} h2{font-size:24px;margin-top:48px;} h3{font-size:20px;font-weight:600;margin-top:32px;}
+a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--hairline);text-underline-offset:3px;}
+a:focus-visible,button:focus-visible,[tabindex]:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+p{max-width:76ch;}
+code{font-family:var(--font-mono);font-size:14px;background:var(--code-bg);padding:2px 6px;border-radius:4px;}
+abbr{text-decoration:none;border-bottom:1px dotted var(--muted);cursor:help;}
+img{max-width:100%;}
+
+/* skip link */
+.skip-link{position:absolute;left:-999px;top:auto;background:var(--ink);color:var(--on-primary);padding:10px 16px;border-radius:9999px;z-index:3000;}
+.skip-link:focus{left:16px;top:16px;}
+
+/* progress bar */
+#progress-bar{position:fixed;top:0;left:0;height:3px;background:var(--accent);z-index:1000;width:0%;transition:width .1s;}
+
+/* header */
+header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+  padding:12px 24px;background:var(--canvas-soft);border-bottom:1px solid var(--hairline);gap:12px;}
+header .current-title{font-weight:650;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);}
+header .controls{display:flex;gap:8px;align-items:center;}
+.btn{border:none;border-radius:9999px;padding:8px 16px;font-family:var(--font-sans);font-weight:600;font-size:14px;cursor:pointer;}
+.btn-primary{background:var(--primary);color:var(--on-primary);}
+.btn-outline{background:transparent;color:var(--ink);border:1px solid var(--hairline);}
+.btn-soft{background:var(--canvas-soft);color:var(--ink);}
+.chapter-pos{font-size:12px;color:var(--muted);white-space:nowrap;}
+#hamburger-btn{display:none;background:transparent;border:none;font-size:20px;cursor:pointer;padding:4px 8px;color:var(--ink);}
+#theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;}
+#theme-toggle svg{width:18px;height:18px;}
+:root[data-theme="dark"] #theme-toggle .icon-moon{display:none;}
+:root:not([data-theme="dark"]) #theme-toggle .icon-sun{display:none;}
+
+/* layout */
+#layout{display:grid;grid-template-columns:280px minmax(0,1fr) 220px;gap:0;min-height:calc(100vh - 53px);}
+#sidebar-scrim{display:none;}
+#sidebar{border-right:1px solid var(--hairline-soft);padding:20px 0;position:sticky;top:53px;align-self:start;height:calc(100vh - 53px);overflow-y:auto;}
+#sidebar h4{font-size:12px;font-weight:600;color:var(--muted);text-transform:none;margin:0 0 8px;padding:0 20px;}
+#sidebar .overview-link{display:block;padding:8px 20px;font-size:14px;color:var(--muted);cursor:pointer;border-left:3px solid transparent;margin-bottom:4px;margin-top:4px;}
+#sidebar .overview-link:hover{background:var(--canvas-soft);}
+#sidebar .overview-link.active{background:var(--canvas-soft);color:var(--ink);font-weight:650;border-left-color:var(--ink);}
+#sidebar .chapter-link{display:flex;gap:8px;align-items:baseline;padding:8px 20px;font-size:14px;color:var(--muted);text-decoration:none;cursor:pointer;border-left:3px solid transparent;}
+#sidebar .chapter-link .num{color:var(--faint);font-variant-numeric:tabular-nums;font-size:13px;min-width:20px;}
+#sidebar .chapter-link:hover{background:var(--canvas-soft);}
+#sidebar .chapter-link.active{background:var(--canvas-soft);color:var(--ink);font-weight:650;border-left-color:var(--ink);}
+#sidebar .chapter-link.active .num{color:var(--ink);}
+main{padding:24px 48px 48px;max-width:860px;margin:0 auto;}
+.breadcrumb{font-size:13px;color:var(--muted);margin-bottom:16px;}
+.breadcrumb .sep{margin:0 6px;color:var(--faint);}
+.chapter-eyebrow{font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0;margin-bottom:6px;}
+#toc{padding:20px 16px;position:sticky;top:53px;align-self:start;font-size:13px;}
+#toc-box{border:1px solid var(--hairline-soft);border-radius:16px;padding:16px;background:var(--canvas-soft);}
+#toc-box h5{font-size:12px;font-weight:600;color:var(--muted);margin:0 0 10px;}
+.toc-h2{display:block;color:var(--muted);text-decoration:none;padding:4px 0;border-left:2px solid transparent;padding-left:8px;transition:color .15s;}
+.toc-h3{display:block;color:var(--faint);text-decoration:none;padding:3px 0;padding-left:20px;font-size:12px;border-left:2px solid transparent;transition:color .15s;}
+.toc-h2.active,.toc-h3.active{color:var(--ink);font-weight:600;border-left-color:var(--ink);}
+.toc-empty{color:var(--faint);font-size:13px;}
+.toc-mobile{display:none;}
+
+/* prev/next chapter navigation (Wikidocs-style page turner) */
+.chapter-nav{display:flex;gap:16px;margin:56px 0 32px;}
+.chapter-nav-card{flex:1;border:1px solid var(--hairline);border-radius:16px;padding:16px 20px;cursor:pointer;min-width:0;}
+.chapter-nav-card:hover{background:var(--canvas-soft);}
+.chapter-nav-card.next{text-align:right;}
+.chapter-nav-label{font-size:12px;color:var(--muted);}
+.chapter-nav-title{font-weight:650;margin-top:4px;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.chapter-nav-card.disabled{visibility:hidden;}
+
+footer{margin-top:48px;background:var(--canvas-soft);color:var(--ink);border-top:1px solid var(--hairline);
+  padding:14px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+footer a{color:var(--muted);cursor:pointer;text-decoration:none;}
+footer a:hover{color:var(--ink);}
+footer .footer-meta{font-size:13px;color:var(--muted);}
+footer .footer-links{display:flex;gap:20px;font-size:13px;}
+
+/* motivation box */
+.motivation{background:var(--canvas-soft);border-radius:16px;padding:20px 24px;margin:16px 0 24px;font-weight:300;font-size:18px;line-height:1.5;}
+.motivation .label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:8px;}
+
+/* smart canvas card (modern unified container for diagrams, charts, tables) */
+.canvas-card{margin:24px 0;border:1px solid var(--hairline-soft);border-radius:16px;background:var(--canvas);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.03);transition:border-color .15s ease;}
+.canvas-card:hover{border-color:var(--hairline);}
+.canvas-card-header{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:var(--canvas-soft);border-bottom:1px solid var(--hairline-soft);}
+.canvas-card-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink);}
+.canvas-card-badge{font-size:11px;font-weight:650;text-transform:uppercase;background:var(--field);color:var(--muted);border-radius:6px;padding:2px 8px;letter-spacing:.3px;}
+.canvas-card-tools{display:flex;align-items:center;gap:6px;}
+.canvas-tool-btn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;border:1px solid var(--hairline-soft);background:var(--canvas);color:var(--muted);cursor:pointer;padding:0;transition:all .15s ease;}
+.canvas-tool-btn:hover{background:var(--field);color:var(--ink);border-color:var(--hairline);transform:translateY(-1px);}
+.canvas-tool-btn svg{width:14px;height:14px;}
+.canvas-card-body{padding:20px;overflow-x:auto;display:flex;justify-content:center;align-items:center;cursor:zoom-in;position:relative;}
+.canvas-card-body.no-zoom{cursor:default;}
+.canvas-card-body svg{max-width:100%;height:auto;display:block;}
+.canvas-card-footer{padding:10px 16px;font-size:13px;color:var(--muted);border-top:1px solid var(--hairline-soft);background:var(--canvas-soft);line-height:1.5;}
+.canvas-card-footer strong{color:var(--ink);font-weight:600;}
+
+/* legacy diagram block support */
+.diagram-block{margin:24px 0;}
+.diagram-block svg{max-width:100%;}
+.diagram-alt{font-size:14px;color:var(--muted);margin-top:8px;}
+.diagram-alt::before{content:"그림 설명: ";font-weight:600;color:var(--ink);}
+
+#diagram-modal{display:none;position:fixed;inset:0;background:rgba(10,10,10,.75);z-index:2500;flex-direction:column;}
+#diagram-modal.open{display:flex;}
+.diagram-modal-toolbar{display:flex;align-items:center;gap:8px;padding:12px 16px;color:var(--on-primary);}
+.diagram-modal-toolbar button{background:rgba(255,255,255,.12);color:var(--on-primary);border:none;border-radius:9999px;width:32px;height:32px;font-size:16px;cursor:pointer;}
+.diagram-modal-toolbar #zoom-level{color:var(--faint);font-size:13px;min-width:48px;text-align:center;}
+.diagram-modal-toolbar .modal-close{color:var(--on-primary);margin-left:auto;}
+#diagram-modal-viewport{flex:1;overflow:hidden;cursor:grab;display:flex;align-items:center;justify-content:center;}
+#diagram-modal-viewport.grabbing{cursor:grabbing;}
+#diagram-modal-stage{transition:transform .05s linear;}
+#diagram-modal-stage svg{max-width:none !important;height:min(80vh,700px);}
+
+/* callouts */
+.callout{border-left:3px solid var(--muted);background:var(--canvas-soft);border-radius:0 12px 12px 0;padding:14px 18px;margin:20px 0;font-size:14px;}
+.callout::before{content:attr(data-label);display:block;font-weight:650;font-size:12px;margin-bottom:4px;}
+.callout.note{border-left-color:var(--ink);}
+.callout.warning{border-left-color:var(--warn);} .callout.warning::before{color:var(--warn);}
+.callout.deep{border-left-color:var(--accent);} .callout.deep::before{color:var(--accent);}
+
+/* bitfield table (protocol packet headers) */
+.bitfield-table-wrap{margin:20px 0;overflow-x:auto;}
+.bitfield-table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12.5px;text-align:center;}
+.bitfield-table th{background:var(--canvas-soft);border:1px solid var(--hairline);padding:6px 6px;color:var(--muted);font-weight:600;}
+.bitfield-table td{border:1px solid var(--hairline);padding:12px 10px;background:var(--field);color:var(--ink);line-height:1.4;}
+.bitfield-table td.highlight{background:var(--canvas-soft);font-weight:650;color:var(--accent);}
+.bitfield-caption{font-size:12px;color:var(--muted);margin-top:6px;font-family:var(--font-sans);text-align:center;}
+
+/* figure / image caption block */
+.figure-block{margin:24px 0;}
+.figure-block img{border-radius:16px;border:1px solid var(--hairline-soft);display:block;}
+.figure-block figcaption{font-size:13px;color:var(--muted);margin-top:8px;}
+
+/* code block */
+.code-block{margin:20px 0;border-radius:16px;overflow:hidden;border:1px solid var(--hairline-soft);}
+.code-block .code-header{background:var(--canvas-soft);padding:6px 16px;font-size:12px;font-weight:600;color:var(--muted);font-family:var(--font-mono);}
+.code-block .code-body{background:var(--code-bg);overflow-x:auto;counter-reset:codeline;}
+.code-block .code-line{display:block;font-family:var(--font-mono);font-size:13.5px;line-height:1.7;white-space:pre;padding-left:16px;}
+.code-block .code-line::before{counter-increment:codeline;content:counter(codeline);display:inline-block;width:32px;margin-right:12px;color:var(--faint);text-align:right;user-select:none;}
+
+/* footnotes */
+sup.fn{cursor:pointer;color:var(--accent);font-weight:600;}
+#footnote-popover{position:fixed;display:none;max-width:340px;background:var(--canvas);border:1px solid var(--hairline);border-radius:12px;padding:12px 16px;font-size:13px;color:var(--muted);box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:1500;}
+#footnote-popover.open{display:block;}
+#footnote-popover a{color:var(--ink);}
+
+/* compare table / chart container (rendered by d3) */
+.compare-wrap,.chart-wrap{margin:24px 0;overflow-x:auto;}
+.compare-caption,.chart-caption{font-size:13px;color:var(--muted);margin-bottom:8px;}
+.compare-verdict{font-size:14px;margin-top:8px;padding:12px 16px;background:var(--canvas-soft);border-radius:12px;}
+.chart-caption-below{font-size:13px;color:var(--muted);margin-top:8px;}
+.chart-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--muted);}
+.chart-legend .swatch{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle;}
+
+/* summary + qa */
+.summary-box{background:var(--field);border-radius:16px;padding:20px 24px;margin:24px 0;}
+.summary-box ul{margin:8px 0 0;padding-left:20px;}
+.qa-row{border:1px solid var(--hairline-soft);border-radius:16px;padding:16px 20px;margin-bottom:8px;}
+.qa-row .q{font-weight:600;cursor:pointer;}
+.qa-row .a{margin-top:8px;color:var(--ink-soft);display:none;}
+.qa-row.open .a{display:block;}
+
+/* cover page */
+.cover-goals{background:var(--field);border-radius:16px;padding:20px 24px;margin:20px 0;}
+.cover-howto{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:20px 0 32px;}
+.cover-howto-card{border:1px solid var(--hairline-soft);border-radius:16px;padding:14px 16px;font-size:13px;}
+.cover-howto-card kbd{background:var(--field);border-radius:6px;padding:2px 6px;font-family:var(--font-mono);font-size:12px;}
+.cover-chapter-row{display:flex;justify-content:space-between;gap:16px;align-items:baseline;border-top:1px solid var(--hairline-soft);padding:14px 0;cursor:pointer;}
+.cover-chapter-row:hover{color:var(--ink);}
+.cover-chapter-row .n{color:var(--faint);min-width:24px;}
+.cover-chapter-row .t{flex:1;font-weight:600;}
+.cover-chapter-row .m{color:var(--muted);font-size:13px;max-width:40ch;}
+.resume-banner{display:flex;justify-content:space-between;align-items:center;background:var(--canvas-soft);border-radius:16px;padding:14px 20px;margin:16px 0;font-size:14px;}
+.chart-actions{display:flex;justify-content:flex-end;margin-top:8px;}
+
+/* search / glossary / references modal */
+#search-modal,#glossary-modal,#references-modal{display:none;position:fixed;inset:0;background:rgba(10,10,10,.5);z-index:2000;align-items:flex-start;justify-content:center;padding-top:10vh;}
+#search-modal.open,#glossary-modal.open,#references-modal.open{display:flex;}
+.modal-panel{background:var(--canvas);border-radius:24px;width:min(640px,92vw);max-height:70vh;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--hairline-soft);}
+.modal-input-wrap{padding:16px;border-bottom:1px solid var(--hairline);display:flex;justify-content:space-between;gap:8px;align-items:center;}
+.modal-input{width:100%;background:var(--field);border:none;border-radius:16px;padding:12px 16px;font-family:var(--font-sans);font-size:16px;color:var(--ink);outline:none;}
+.modal-input:focus{box-shadow:0 0 0 2px var(--ink) inset;}
+.modal-close{background:transparent;border:none;font-size:20px;cursor:pointer;color:var(--muted);}
+.modal-results{overflow-y:auto;padding:8px;}
+.result-item{padding:10px 12px;border-radius:12px;cursor:pointer;font-size:14px;}
+.result-item.selected{background:var(--canvas-soft);}
+.result-badge{display:inline-block;font-size:11px;font-weight:600;color:var(--on-primary);background:var(--muted);border-radius:9999px;padding:2px 8px;margin-right:8px;}
+mark{background:var(--accent);color:var(--on-primary);border-radius:3px;padding:0 2px;}
+.glossary-list dt{font-weight:650;margin-top:16px;}
+.glossary-list dd{margin:4px 0 0;color:var(--ink-soft);font-size:14px;}
+.glossary-list dd .backlink{font-size:12px;color:var(--accent);cursor:pointer;}
+.ref-group-label{font-size:12px;font-weight:600;color:var(--muted);padding:12px 12px 4px;}
+.ref-row{padding:10px 12px;border-radius:12px;font-size:14px;}
+.ref-row a{color:var(--ink);}
+.ref-kind{font-size:11px;color:var(--muted);}
+
+/* mobile off-canvas */
+@media (max-width:840px){
+  #layout{grid-template-columns:1fr;}
+  #hamburger-btn{display:inline-block;}
+  #toc{display:none;}
+  .toc-mobile{display:block;margin-bottom:24px;}
+  .toc-mobile summary{cursor:pointer;font-weight:600;font-size:14px;padding:10px 14px;background:var(--canvas-soft);border-radius:12px;}
+  .toc-mobile[open] summary{border-radius:12px 12px 0 0;}
+  .toc-mobile-body{border:1px solid var(--hairline-soft);border-top:none;border-radius:0 0 12px 12px;padding:8px 14px;}
+  #sidebar{position:fixed;top:0;left:-85vw;width:80vw;max-width:320px;height:100vh;background:var(--canvas);z-index:1600;transition:left .25s ease;box-shadow:0 0 0 1px var(--hairline-soft);}
+  #sidebar.open{left:0;}
+  #sidebar-scrim{display:none;position:fixed;inset:0;background:rgba(10,10,10,.4);z-index:1550;}
+  #sidebar-scrim.open{display:block;}
+  main{padding:24px 20px 32px;}
+}
+
+/* print */
+@media print{
+  header,#sidebar,#toc,footer,#progress-bar,.chapter-nav,#search-modal,#glossary-modal,#references-modal,#diagram-modal,.toc-mobile,#hamburger-btn,#footnote-popover,.skip-link{display:none !important;}
+  main{max-width:100%;padding:0;}
+  a{text-decoration:none;color:var(--ink);}
+}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">본문으로 건너뛰기</a>
+<div id="progress-bar"></div>
+
+<header>
+  <button id="hamburger-btn" aria-label="목차 열기">☰</button>
+  <div class="current-title" id="header-doc-title">문서 제목</div>
+  <div class="controls">
+    <span class="chapter-pos" id="chapter-pos">표지</span>
+    <button class="btn btn-soft" id="search-trigger">검색 (Ctrl+K)</button>
+    <button class="btn btn-soft" id="glossary-trigger">용어집 (Shift+/)</button>
+    <button class="btn btn-soft" id="references-trigger">참고문헌</button>
+    <button class="btn btn-outline" id="theme-toggle" aria-label="테마 전환">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>
+    </button>
+  </div>
+</header>
+
+<div id="sidebar-scrim"></div>
+<div id="layout">
+  <nav id="sidebar" aria-label="목차">
+    <a class="overview-link" id="overview-link">📖 개요 / 표지</a>
+    <h4>챕터</h4>
+    <div id="chapter-list"></div>
+  </nav>
+  <main id="main-content" tabindex="-1"></main>
+  <aside id="toc" aria-label="이 페이지의 목차"><div id="toc-box"><h5>이 페이지의 내용</h5><div id="toc-list"><div class="toc-empty">표지 페이지입니다</div></div></div></aside>
+</div>
+
+<footer>
+  <div class="footer-meta" id="footer-meta">문서 제목 · v0.1</div>
+</footer>
+
+<div id="footnote-popover"></div>
+
+<!-- ============ DIAGRAM ZOOM LIGHTBOX ============ -->
+<div id="diagram-modal" role="dialog" aria-label="다이어그램 확대 보기">
+  <div class="diagram-modal-toolbar">
+    <button id="diagram-zoom-out" aria-label="축소">−</button>
+    <span id="zoom-level">100%</span>
+    <button id="diagram-zoom-in" aria-label="확대">+</button>
+    <button id="diagram-zoom-reset" aria-label="초기화" style="width:auto;padding:0 12px;">초기화</button>
+    <button class="modal-close" data-close="diagram-modal" aria-label="닫기">✕</button>
+  </div>
+  <div id="diagram-modal-viewport"><div id="diagram-modal-stage"></div></div>
+</div>
+
+<!-- ============ SEARCH MODAL ============ -->
+<div id="search-modal" role="dialog" aria-label="검색">
+  <div class="modal-panel">
+    <div class="modal-input-wrap"><input class="modal-input" id="search-input" placeholder="검색어를 입력하세요..."><button class="modal-close" data-close="search-modal" aria-label="닫기">✕</button></div>
+    <div class="modal-results" id="search-results"></div>
+  </div>
+</div>
+
+<!-- ============ GLOSSARY MODAL ============ -->
+<div id="glossary-modal" role="dialog" aria-label="용어집">
+  <div class="modal-panel">
+    <div class="modal-input-wrap"><input class="modal-input" id="glossary-filter" placeholder="용어 필터..."><button class="modal-close" data-close="glossary-modal" aria-label="닫기">✕</button></div>
+    <div class="modal-results"><dl class="glossary-list" id="glossary-list"></dl></div>
+  </div>
+</div>
+
+<!-- ============ REFERENCES MODAL ============ -->
+<div id="references-modal" role="dialog" aria-label="참고문헌">
+  <div class="modal-panel">
+    <div class="modal-input-wrap"><strong>참고문헌</strong><button class="modal-close" data-close="references-modal" aria-label="닫기">✕</button></div>
+    <div class="modal-results" id="references-list"></div>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     CONTENT DATA — this is the ONLY block a content author should edit.
+     Schema:
+     {
+       "title": string, "version": string, "createdDate": "YYYY-MM-DD", "reviewedDate": "YYYY-MM-DD",
+       "learningGoals": [string, ...],           // shown on the cover page
+       "chapters": [{
+         "id": string, "title": string,          // do NOT prefix title with a manual number
+         "motivation": string,
+         "sections": [{"heading": string, "html": string}],
+           // html may include:
+           //  <sup class="fn" data-ref="n">n</sup>                                    — footnote marker (popover)
+           //  <div class="diagram-block"><pre class="mermaid">...</pre><div class="diagram-alt">그림 설명: ...</div></div>
+           //  <div class="callout note|warning|deep" data-label="참고|주의|심화">...</div>
+           //  <figure class="figure-block"><img src="..." alt="..."><figcaption>Figure n. ...</figcaption></figure>
+           //  <div class="code-block" data-lang="JSON"><pre><code>...raw code...</code></pre></div>
+         "charts": [{
+           "figureLabel": "Figure 1", "caption": string, "type": "bar"|"line",
+           "xLabel": string, "yLabel": string, "unit": string,
+           "series": [{"name": string, "points": [{"x": string, "y": number}, ...]}]
+         }],
+         "compareTables": [{
+           "caption": string, "figureLabel": string,
+           "columns": ["기술명","핵심 특징","장점","단점","적합 사용처","근거 문서"],
+           "rows": [{"name":string,"highlighted":bool,"cells":[string,...]}],
+           "verdict": string
+         }],
+         "summary": [string,...],
+         "qa": [{"q": string, "a": string}]
+       }],
+       "glossary": [{"term": string, "full": string, "definition": string, "seeIn": ["chapterId",...]}],
+       "references": [{"id": number, "text": string, "url": string, "kind": "normative"|"informative"}]
+     }
+     ========================================================================== -->
+<script type="application/json" id="content-data">
+{
+  "title": "예시: HTTP/3 및 대안 전송 프로토콜",
+  "version": "v0.2",
+  "createdDate": "2026-01-01",
+  "reviewedDate": "2026-01-01",
+  "learningGoals": [
+    "QUIC/HTTP-3가 기존 TCP+TLS 스택과 구조적으로 다른 지점을 설명할 수 있다",
+    "경쟁 전송 프로토콜(TCP+TLS, SCTP)과의 트레이드오프를 근거를 들어 잘 설명할 수 있다",
+    "핸드셰이크 지연·처리량 수치를 표준 문서에 근거해 인용할 수 있다"
+  ],
+  "chapters": [
+    {
+      "id": "ch1",
+      "title": "QUIC과 HTTP/3 개요",
+      "motivation": "HTTP/2는 TCP의 head-of-line blocking 문제를 완전히 해결하지 못했습니다. QUIC 기반 HTTP/3가 왜 표준화되었는지 이해하면, 전송 계층 설계의 트레이드오프를 근거를 들어 잘 설명할 수 있습니다.",
+      "sections": [
+        {"heading": "1.1 배경", "html": "<p>HTTP/3는 <abbr title=\"QUIC: Quick UDP Internet Connections\">QUIC</abbr><sup class=\"fn\" data-ref=\"1\">1</sup> 위에서 동작하는 프로토콜로, RFC 9114<sup class=\"fn\" data-ref=\"2\">2</sup>에 정의되어 있습니다.</p><div class=\"diagram-block\"><pre class=\"mermaid\">graph LR;A[Client]-->|QUIC/UDP|B[Server];B-->|1-RTT handshake|A;</pre><div class=\"diagram-alt\">클라이언트와 서버가 UDP 기반 QUIC으로 1-RTT 핸드셰이크를 수행하는 기본 흐름을 나타낸다.</div></div><div class=\"callout note\" data-label=\"참고\">QUIC은 전송 계층이지만 커널이 아닌 사용자 공간(userspace)에서 구현되어 배포 속도가 빠르다는 실무적 장점이 있다.</div>"},
+        {"heading": "1.2 핸드셰이크 지연 비교", "html": "<p>초기 연결 수립까지 걸리는 RTT 수를 비교하면 QUIC의 0/1-RTT 이점이 드러난다<sup class=\"fn\" data-ref=\"1\">1</sup>.</p><h3>1.2.1 0-RTT 흐름 예시</h3><div class=\"callout warning\" data-label=\"주의\">0-RTT는 재전송 공격에 취약할 수 있어 멱등 요청에만 사용해야 한다(RFC 9001).</div><div class=\"code-block\" data-lang=\"text\"><pre><code>ClientHello ------------------>\n                    <------------------ ServerHello, Finished\nApplication Data ------------------></code></pre></div>"}
+      ],
+      "charts": [
+        {
+          "figureLabel": "Figure 1", "caption": "Figure 1. 프로토콜별 평균 연결 수립 지연 (RTT 기준)",
+          "type": "bar", "xLabel": "프로토콜", "yLabel": "지연", "unit": "RTT",
+          "series": [{"name": "연결 수립까지 필요한 RTT", "points": [
+            {"x":"TCP+TLS1.2","y":3},{"x":"TCP+TLS1.3","y":2},{"x":"QUIC (1-RTT)","y":1},{"x":"QUIC (0-RTT 재연결)","y":0}
+          ]}]
+        }
+      ],
+      "compareTables": [
+        {
+          "caption": "Table 1. 전송 계층 프로토콜 비교",
+          "figureLabel": "Table 1",
+          "columns": ["기술명","핵심 특징","장점","단점","적합 사용처","근거 문서"],
+          "rows": [
+            {"name":"QUIC (HTTP/3)","highlighted":true,"cells":["UDP 기반, 스트림 다중화 내장","HoL blocking 제거, 0/1-RTT 재연결","UDP 차단 네트워크에서 폴백 필요","웹/모바일 저지연 서비스","[1][2]"]},
+            {"name":"TCP+TLS (HTTP/2)","highlighted":false,"cells":["연결 기반, 커널 구현 성숙","광범위한 미들박스 호환성","TCP 계층 HoL blocking","레거시 인프라 호환 필요 환경","[3]"]},
+            {"name":"SCTP","highlighted":false,"cells":["메시지 지향, 멀티스트리밍","독립적 스트림 순서 보장","브라우저/NAT 지원 미흡","텔레콤 시그널링(SS7 대체)","[4]"]}
+          ],
+          "verdict": "웹 트래픽처럼 다수의 병렬 요청이 하나의 연결을 공유하는 환경에서는 커널 레벨 HoL blocking을 제거하는 QUIC이 구조적으로 우월하여 본 챕터의 기준 기술로 채택함."
+        }
+      ],
+      "summary": ["QUIC은 UDP 위에서 스트림 다중화를 구현해 HoL blocking을 해소한다.", "HTTP/3는 RFC 9114로 표준화되었다.", "미들박스/방화벽 호환성은 여전히 실무 이슈다."],
+      "qa": [
+        {"q":"QUIC이 TCP보다 항상 빠른가?", "a":"아니오. UDP 차단 네트워크에서는 폴백이 필요하며, 손실률이 매우 낮은 안정적 네트워크에서는 이득이 제한적이다."},
+        {"q":"0-RTT의 보안 트레이드오프는?", "a":"재전송 공격에 취약할 수 있어 멱등 요청에만 사용을 권장한다(RFC 9001 참조)."}
+      ]
+    }
+  ],
+  "glossary": [
+    {"term":"QUIC","full":"Quick UDP Internet Connections","definition":"UDP 위에서 동작하는 전송 프로토콜로 다중 스트림과 내장 암호화를 제공한다.","seeIn":["ch1"]},
+    {"term":"HoL","full":"Head-of-Line Blocking","definition":"앞선 패킷의 지연/손실이 뒤따르는 패킷 처리를 막는 현상.","seeIn":["ch1"]}
+  ],
+  "references": [
+    {"id":1,"text":"QUIC: A UDP-Based Multiplexed and Secure Transport","url":"https://www.rfc-editor.org/rfc/rfc9000","kind":"normative"},
+    {"id":2,"text":"HTTP/3","url":"https://www.rfc-editor.org/rfc/rfc9114","kind":"normative"},
+    {"id":3,"text":"Hypertext Transfer Protocol Version 2 (HTTP/2)","url":"https://www.rfc-editor.org/rfc/rfc9113","kind":"normative"},
+    {"id":4,"text":"Stream Control Transmission Protocol","url":"https://www.rfc-editor.org/rfc/rfc9260","kind":"normative"}
+  ]
+}
+</script>
+
+<script>
+/* ============ INLINE MARKDOWN & ESCAPING UTILITIES ============ */
+function parseInlineMarkdown(str){
+  if(typeof str !== 'string') return str;
+  return str
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>');
+}
+
+function escapeHtml(str){
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ============ DATA PARSING & ERROR OVERLAY ============ */
+function renderErrorOverlay(err, raw){
+  const main = document.getElementById('main-content') || document.body;
+  let snippet = '';
+  const match = (err.message||'').match(/position (\d+)/i);
+  if(match && raw){
+    const pos = parseInt(match[1]);
+    const lines = raw.slice(0, pos).split('\n');
+    const lineNum = lines.length;
+    const allLines = raw.split('\n');
+    const start = Math.max(0, lineNum - 4);
+    const end = Math.min(allLines.length, lineNum + 3);
+    snippet = allLines.slice(start, end).map((l, idx)=>{
+      const curLine = start + idx + 1;
+      const isErr = curLine === lineNum;
+      return `<div style="${isErr?'background:#ffebee;color:#c62828;font-weight:bold;':''}padding:2px 8px;">` +
+        `<span style="display:inline-block;width:40px;color:#888;">${curLine}:</span> ${escapeHtml(l)}</div>`;
+    }).join('');
+    snippet = `<div style="margin-top:12px;font-family:var(--font-mono, monospace);font-size:13px;background:var(--canvas-soft, #f9f9f9);border:1px solid var(--hairline, #eee);border-radius:6px;padding:8px;overflow-x:auto;">${snippet}</div>`;
+  }
+
+  main.innerHTML = `
+    <div style="max-width:760px;margin:40px auto;padding:24px;border:2px solid #D55E00;border-radius:12px;background:var(--canvas, #fff);">
+      <h2 style="color:#D55E00;margin-top:0;">⚠️ JSON 데이터 파싱 오류</h2>
+      <p>문서의 <code>#content-data</code> JSON을 파싱하는 도중 문법 오류가 발생했습니다.</p>
+      <div style="background:#fff3e0;border-left:4px solid #E69F00;padding:12px;margin:16px 0;font-family:var(--font-mono, monospace);font-size:14px;color:#333;">
+        ${escapeHtml(err.message)}
+      </div>
+      ${snippet}
+      <div style="margin-top:20px;font-size:14px;color:var(--muted,#666);line-height:1.6;">
+        <strong>해결 가이드:</strong><br>
+        1. JSON 내부의 따옴표(<code>"</code>)가 문자열 안에서 올바르게 이스케이프(<code>\\"</code>)되었는지 확인하세요.<br>
+        2. 객체나 배열 마지막 항목 뒤에 불필요한 쉼표(Trailing Comma)가 없는지 확인하세요.<br>
+        3. 저장소의 검증 스크립트 <code>python skills/study-material-generator/scripts/validate-study.py &lt;html파일&gt;</code>를 실행하여 정밀 검사할 수 있습니다.
+      </div>
+    </div>
+  `;
+}
+
+function loadContentData(){
+  const scriptEl = document.getElementById('content-data');
+  if(!scriptEl){
+    renderErrorOverlay(new Error("id='content-data' 스크립트 블록을 찾을 수 없습니다."), "");
+    return null;
+  }
+  const raw = scriptEl.textContent;
+  try {
+    return JSON.parse(raw);
+  } catch(err){
+    renderErrorOverlay(err, raw);
+    return null;
+  }
+}
+
+const DATA = loadContentData();
+const OKABE_ITO = ['#0072B2','#E69F00','#009E73','#D55E00','#CC79A7','#56B4E9','#F0E442'];
+let currentChapter = -1; // -1 = cover page
+let currentHeadIndex = [];
+let headingObserver = null;
+let diagramZoom = {scale:1, x:0, y:0};
+
+/* ============ INIT ============ */
+function init(){
+  if(!DATA) return; // JSON 파싱 에러 시 오버레이 유지
+  document.getElementById('footer-meta').textContent = `${DATA.title} · ${DATA.version} · 작성일 ${DATA.createdDate} · 최종 검토 ${DATA.reviewedDate}`;
+  document.getElementById('header-doc-title').textContent = DATA.title;
+  document.title = DATA.title;
+
+  buildSearchIndex();
+  renderGlossary();
+  renderReferences();
+  wireGlobalEvents();
+
+  if(!localStorage.getItem('theme') && matchMedia('(prefers-color-scheme: dark)').matches){
+    document.documentElement.setAttribute('data-theme','dark');
+  }
+  if(localStorage.getItem('theme')) document.documentElement.setAttribute('data-theme', localStorage.getItem('theme'));
+  mermaid.initialize({startOnLoad:false, theme: document.documentElement.getAttribute('data-theme')==='dark' ? 'dark':'default'});
+
+  // deep-link via URL hash (#ch-2) takes priority; otherwise land on the cover page
+  const hashMatch = location.hash.match(/^#ch-(\d+)$/);
+  if(hashMatch && DATA.chapters[+hashMatch[1]]){
+    renderChapter(+hashMatch[1]);
+  } else {
+    renderCover();
+  }
+}
+
+
+/* ============ SIDEBAR ============ */
+/* Sidebar = book-level chapter navigation only. In-page section navigation
+   (with h3 nesting and scroll-position tracking) lives solely in the right
+   TOC (#toc-box) to avoid showing the same list in two places. */
+function renderSidebar(){
+  document.getElementById('overview-link').classList.toggle('active', currentChapter===-1);
+  const list = document.getElementById('chapter-list');
+  list.innerHTML = DATA.chapters.map((c,i)=>
+    `<a class="chapter-link${i===currentChapter?' active':''}" data-idx="${i}"><span class="num">${i+1}</span><span>${c.title}</span></a>`
+  ).join('');
+  list.querySelectorAll('.chapter-link').forEach(el=>el.addEventListener('click', ()=>{ renderChapter(parseInt(el.dataset.idx)); closeSidebarDrawer(); }));
+}
+function openSidebarDrawer(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-scrim').classList.add('open'); }
+function closeSidebarDrawer(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-scrim').classList.remove('open'); }
+
+/* ============ COVER PAGE ============ */
+function renderCover(){
+  currentChapter = -1;
+  history.replaceState(null,'', location.pathname + location.search);
+  // Note: we deliberately do NOT overwrite localStorage's lastChapter here —
+  // it must keep pointing at the last real chapter so the resume banner below works.
+  const main = document.getElementById('main-content');
+  const lastRead = localStorage.getItem('lastChapter');
+  const resumeIdx = (lastRead !== null && lastRead !== '-1') ? parseInt(lastRead) : null;
+  main.innerHTML = `
+    <div class="chapter-eyebrow">STUDY GUIDE</div>
+    <h1>${DATA.title}</h1>
+    <p style="color:var(--muted);">${DATA.version} · 작성일 ${DATA.createdDate} · 최종 검토 ${DATA.reviewedDate}</p>
+    <div class="cover-goals">
+      <strong>학습 목표</strong>
+      <ul>${(DATA.learningGoals||[]).map(g=>`<li>${parseInlineMarkdown(g)}</li>`).join('')}</ul>
+    </div>
+    <h2 style="margin-top:32px;">이 문서 보는 법</h2>
+    <div class="cover-howto">
+      <div class="cover-howto-card"><kbd>Ctrl</kbd>+<kbd>K</kbd><br>전체 문서에서 키워드 검색</div>
+      <div class="cover-howto-card"><kbd>Shift</kbd>+<kbd>/</kbd><br>약어·용어 사전 열기</div>
+      <div class="cover-howto-card"><kbd>←</kbd> / <kbd>→</kbd><br>이전/다음 챕터로 이동</div>
+      <div class="cover-howto-card">번호가 매겨진 각주<br>클릭 시 근거 문서 팝업</div>
+    </div>
+    <h2>챕터 구성</h2>
+    <div id="cover-chapter-list"></div>
+  `;
+  const listEl = document.getElementById('cover-chapter-list');
+  DATA.chapters.forEach((c,i)=>{
+    const row = document.createElement('div');
+    row.className='cover-chapter-row';
+    row.innerHTML = `<span class="n">${i+1}</span><span class="t">${parseInlineMarkdown(c.title)}</span><span class="m">${parseInlineMarkdown(c.motivation)}</span>`;
+    row.addEventListener('click', ()=>renderChapter(i));
+    listEl.appendChild(row);
+  });
+  if(resumeIdx!==null && DATA.chapters[resumeIdx]){
+    const banner = document.createElement('div');
+    banner.className='resume-banner';
+    banner.innerHTML = `<span>마지막으로 읽던 챕터: <strong>${DATA.chapters[resumeIdx].title}</strong></span><button class="btn btn-primary">이어보기 →</button>`;
+    banner.querySelector('button').addEventListener('click', ()=>renderChapter(resumeIdx));
+    listEl.before(banner);
+  }
+  const startBtn = document.createElement('button');
+  startBtn.className='btn btn-primary'; startBtn.style.marginTop='24px'; startBtn.textContent='시작하기 →';
+  startBtn.addEventListener('click', ()=>renderChapter(0));
+  main.appendChild(startBtn);
+
+  document.getElementById('chapter-pos').textContent = '표지';
+  document.getElementById('toc-list').innerHTML = '<div class="toc-empty">표지 페이지입니다</div>';
+  currentHeadIndex = [];
+  if(headingObserver) headingObserver.disconnect();
+  renderSidebar();
+  window.scrollTo(0,0);
+}
+
+/* ============ FOOTNOTE POPOVER ============ */
+function footnoteHTML(refId){
+  const ref = DATA.references.find(r=>r.id===refId);
+  if(!ref) return '';
+  return `[${refId}] <a href="${ref.url}" target="_blank" rel="noopener">${ref.text}</a><br><span class="ref-kind">${ref.kind}</span>`;
+}
+function showFootnotePopover(el, refId){
+  const pop = document.getElementById('footnote-popover');
+  pop.innerHTML = footnoteHTML(refId);
+  const rect = el.getBoundingClientRect();
+  pop.style.left = Math.min(rect.left, window.innerWidth-360) + 'px';
+  pop.style.top = (rect.bottom + 8) + 'px';
+  pop.classList.add('open');
+}
+function hideFootnotePopover(){ document.getElementById('footnote-popover').classList.remove('open'); }
+
+/* ============ COMPARE TABLE (D3) ============ */
+function themeVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+// Measures how tall `text` renders when wrapped to `width` px, so SVG rows can
+// be sized to fit instead of truncating text into the next column.
+function measureWrappedHeight(text, width, fontSizePx){
+  const probe = document.createElement('div');
+  probe.style.cssText = `position:absolute;visibility:hidden;left:-9999px;top:-9999px;
+    width:${width}px;font-size:${fontSizePx}px;line-height:1.4;font-family:var(--font-sans);
+    word-break:keep-all;overflow-wrap:break-word;white-space:normal;`;
+  probe.textContent = text.replace(/[*`_]/g,''); // strip markdown markup for measurement
+  document.body.appendChild(probe);
+  const h = probe.offsetHeight;
+  document.body.removeChild(probe);
+  return h;
+}
+
+/* ============ SVG ICONS & EXPORT ============ */
+const ICON_EXPAND = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>`;
+const ICON_DOWNLOAD = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>`;
+
+function exportSvg(svgNode, name){
+  const source = new XMLSerializer().serializeToString(svgNode);
+  const blob = new Blob([source], {type:'image/svg+xml'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `${name}.svg`; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ============ COMPARE TABLE (D3 Smart Canvas Card) ============ */
+function themeVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+function measureWrappedHeight(text, width, fontSizePx){
+  const probe = document.createElement('div');
+  probe.style.cssText = `position:absolute;visibility:hidden;left:-9999px;top:-9999px;
+    width:${width}px;font-size:${fontSizePx}px;line-height:1.4;font-family:var(--font-sans);
+    word-break:keep-all;overflow-wrap:break-word;white-space:normal;`;
+  probe.textContent = text.replace(/[*`_]/g,'');
+  document.body.appendChild(probe);
+  const h = probe.offsetHeight;
+  document.body.removeChild(probe);
+  return h;
+}
+
+function renderCompareTable(container, table){
+  const card = d3.select(container).append('div').attr('class','canvas-card');
+  
+  // Header with title and modern tool buttons
+  const header = card.append('div').attr('class','canvas-card-header');
+  const titleBox = header.append('div').attr('class','canvas-card-title');
+  titleBox.append('span').attr('class','canvas-card-badge').text('Table');
+  titleBox.append('span').text(table.caption);
+
+  const tools = header.append('div').attr('class','canvas-card-tools');
+  const expandBtn = tools.append('button').attr('class','canvas-tool-btn')
+    .attr('title','전체화면 확대 보기').attr('aria-label','확대 보기').html(ICON_EXPAND);
+  const dlBtn = tools.append('button').attr('class','canvas-tool-btn')
+    .attr('title','SVG 벡터 다운로드').attr('aria-label','SVG 다운로드').html(ICON_DOWNLOAD);
+
+  // Body container
+  const body = card.append('div').attr('class','canvas-card-body')
+    .attr('title','클릭하여 전체화면 확대');
+
+  const svgWidth = 900, headH = 40, cellPadX = 12, cellPadY = 10, minRowH = 44, fontSize = 12.5;
+  const colW = svgWidth / table.columns.length;
+  const cellInnerWidth = colW - cellPadX*2;
+  const ink = themeVar('--ink'), soft = themeVar('--canvas-soft'), hairline = themeVar('--hairline');
+
+  const rows = table.rows.map(row=>{
+    const vals = [row.name, ...row.cells];
+    const rowH = Math.max(minRowH, Math.max(...vals.map(v=>measureWrappedHeight(String(v), cellInnerWidth, fontSize))) + cellPadY*2);
+    return {row, vals, rowH};
+  });
+  const totalH = headH + rows.reduce((sum,r)=>sum+r.rowH,0);
+
+  const svg = body.append('svg')
+    .attr('viewBox', `0 0 ${svgWidth} ${totalH}`).attr('width','100%')
+    .attr('role','img').attr('aria-label', table.caption);
+  svg.append('title').text(table.caption + '. ' + table.verdict);
+
+  table.columns.forEach((col,ci)=>{
+    svg.append('rect').attr('x',ci*colW).attr('y',0).attr('width',colW).attr('height',headH).attr('fill',soft);
+    svg.append('text').attr('x',ci*colW+cellPadX).attr('y',headH/2+5).attr('font-size',13).attr('font-weight',600).attr('fill',ink).text(col);
+  });
+
+  let y = headH;
+  rows.forEach(({row, vals, rowH})=>{
+    if(row.highlighted){
+      svg.append('rect').attr('x',0).attr('y',y).attr('width',svgWidth).attr('height',rowH).attr('fill',soft).attr('stroke',ink).attr('stroke-width',1);
+    }
+    vals.forEach((val,ci)=>{
+      svg.append('foreignObject').attr('x',ci*colW).attr('y',y).attr('width',colW).attr('height',rowH)
+        .append('xhtml:div')
+        .style('padding', `${cellPadY}px ${cellPadX}px`)
+        .style('font-size', fontSize+'px').style('line-height','1.4')
+        .style('font-family','var(--font-sans)').style('color', ink)
+        .style('word-break','keep-all').style('overflow-wrap','break-word')
+        .html(parseInlineMarkdown(String(val)));
+    });
+    svg.append('line').attr('x1',0).attr('x2',svgWidth).attr('y1',y+rowH).attr('y2',y+rowH).attr('stroke',hairline);
+    y += rowH;
+  });
+
+  // Wiring tools
+  expandBtn.on('click', ()=>openDiagramZoom(svg.node()));
+  dlBtn.on('click', ()=>exportSvg(svg.node(), table.figureLabel||'comparison-table'));
+  body.on('click', ()=>openDiagramZoom(svg.node()));
+
+  // Footer with architectural verdict
+  if(table.verdict){
+    const footer = card.append('div').attr('class','canvas-card-footer');
+    footer.html(`<strong>💡 핵심 선정 결론(Verdict):</strong> ${parseInlineMarkdown(table.verdict)}`);
+  }
+}
+
+/* ============ CHART (D3 Smart Canvas Card) ============ */
+function renderChart(container, chart){
+  const card = d3.select(container).append('div').attr('class','canvas-card');
+
+  // Header with title and modern tool buttons
+  const header = card.append('div').attr('class','canvas-card-header');
+  const titleBox = header.append('div').attr('class','canvas-card-title');
+  titleBox.append('span').attr('class','canvas-card-badge').text(chart.type==='line'?'Trend Chart':'Metric Chart');
+  titleBox.append('span').text(chart.caption);
+
+  const tools = header.append('div').attr('class','canvas-card-tools');
+  const expandBtn = tools.append('button').attr('class','canvas-tool-btn')
+    .attr('title','전체화면 확대 보기').attr('aria-label','확대 보기').html(ICON_EXPAND);
+  const dlBtn = tools.append('button').attr('class','canvas-tool-btn')
+    .attr('title','SVG 벡터 다운로드').attr('aria-label','SVG 다운로드').html(ICON_DOWNLOAD);
+
+  // Body container
+  const body = card.append('div').attr('class','canvas-card-body')
+    .attr('title','클릭하여 전체화면 확대');
+
+  const width = 640, height = 320, margin = {top:20,right:20,bottom:44,left:56};
+  const ink = themeVar('--ink'), hairline = themeVar('--hairline'), muted = themeVar('--muted');
+  const allX = chart.series[0].points.map(p=>p.x);
+  const maxY = d3.max(chart.series.flatMap(s=>s.points.map(p=>p.y))) * 1.15 || 1;
+  const x = d3.scaleBand().domain(allX).range([margin.left, width-margin.right]).padding(0.3);
+  const y = d3.scaleLinear().domain([0, maxY]).range([height-margin.bottom, margin.top]);
+
+  const svg = body.append('svg').attr('viewBox', `0 0 ${width} ${height}`).attr('width','100%')
+    .attr('role','img').attr('aria-label', chart.caption);
+  svg.append('title').text(chart.caption);
+
+  svg.append('g').attr('transform',`translate(0,${height-margin.bottom})`)
+    .call(d3.axisBottom(x)).selectAll('text').attr('fill',muted).attr('font-size',11);
+  svg.append('g').attr('transform',`translate(${margin.left},0)`)
+    .call(d3.axisLeft(y).ticks(5)).selectAll('text').attr('fill',muted).attr('font-size',11);
+  svg.selectAll('.domain, .tick line').attr('stroke', hairline);
+
+  svg.append('text').attr('x', width/2).attr('y', height-4).attr('text-anchor','middle').attr('font-size',12).attr('fill',muted)
+    .text(chart.xLabel||'');
+  svg.append('text').attr('transform','rotate(-90)').attr('x', -height/2).attr('y', 14).attr('text-anchor','middle').attr('font-size',12).attr('fill',muted)
+    .text(chart.unit ? `${chart.yLabel} (${chart.unit})` : (chart.yLabel||''));
+
+  if(chart.type==='bar'){
+    const sub = d3.scaleBand().domain(chart.series.map(s=>s.name)).range([0, x.bandwidth()]).padding(0.1);
+    chart.series.forEach((s,si)=>{
+      svg.selectAll(`.bar-${si}`).data(s.points).enter().append('rect')
+        .attr('x', d=>x(d.x)+sub(s.name)).attr('y', d=>y(d.y))
+        .attr('width', sub.bandwidth()).attr('height', d=>y(0)-y(d.y))
+        .attr('fill', OKABE_ITO[si % OKABE_ITO.length]);
+    });
+  } else {
+    const line = d3.line().x(d=>x(d.x)+x.bandwidth()/2).y(d=>y(d.y));
+    chart.series.forEach((s,si)=>{
+      svg.append('path').datum(s.points).attr('fill','none').attr('stroke',OKABE_ITO[si % OKABE_ITO.length]).attr('stroke-width',2).attr('d',line);
+      svg.selectAll(`.dot-${si}`).data(s.points).enter().append('circle')
+        .attr('cx', d=>x(d.x)+x.bandwidth()/2).attr('cy', d=>y(d.y)).attr('r',3.5).attr('fill',OKABE_ITO[si % OKABE_ITO.length]);
+    });
+  }
+
+  // Wiring tools
+  expandBtn.on('click', ()=>openDiagramZoom(svg.node()));
+  dlBtn.on('click', ()=>exportSvg(svg.node(), chart.figureLabel||'metric-chart'));
+  body.on('click', ()=>openDiagramZoom(svg.node()));
+
+  // Footer with legend & takeaway
+  const footer = card.append('div').attr('class','canvas-card-footer');
+  if(chart.series.length>1){
+    const legend = footer.append('div').attr('class','chart-legend').style('margin-bottom','6px');
+    chart.series.forEach((s,si)=>{
+      legend.append('span').html(`<span class="swatch" style="background:${OKABE_ITO[si % OKABE_ITO.length]}"></span>${s.name}`);
+    });
+  }
+  footer.append('div').text(chart.caption);
+}
+
+/* ============ CODE BLOCKS ============ */
+function enhanceCodeBlocks(container){
+  container.querySelectorAll('.code-block').forEach(block=>{
+    const pre = block.querySelector('pre');
+    if(!pre || block.dataset.enhanced) return;
+    const lang = block.dataset.lang || 'text';
+    const raw = pre.textContent;
+    const lines = raw.replace(/^\n+|\n+$/g,'').split('\n');
+    block.innerHTML = `<div class="code-header">${lang}</div><div class="code-body">${
+      lines.map(l=>`<span class="code-line">${l.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>`).join('')
+    }</div>`;
+    block.dataset.enhanced = '1';
+  });
+}
+
+/* ============ MERMAID RENDER + SMART CANVAS CARD WRAPPER ============ */
+async function renderMermaidAndZoomButtons(){
+  try {
+    await mermaid.run({querySelector: '#sections-container .mermaid'});
+  } catch(err) {
+    console.warn("Mermaid run caught warning:", err);
+  }
+
+  document.querySelectorAll('#sections-container .diagram-block').forEach(block=>{
+    if(block.dataset.canvasEnhanced) return;
+    const svg = block.querySelector('svg');
+    if(!svg) return;
+
+    // Extract optional alt text
+    const altEl = block.querySelector('.diagram-alt');
+    const altText = altEl ? altEl.textContent.replace(/^그림 설명:\s*/,'') : '';
+
+    // Create Smart Canvas Card
+    const card = document.createElement('div');
+    card.className = 'canvas-card';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'canvas-card-header';
+    header.innerHTML = `
+      <div class="canvas-card-title">
+        <span class="canvas-card-badge">Architecture</span>
+        <span>시퀀스 및 아키텍처 다이어그램</span>
+      </div>
+      <div class="canvas-card-tools">
+        <button class="canvas-tool-btn" title="전체화면 확대 보기" aria-label="확대 보기">${ICON_EXPAND}</button>
+        <button class="canvas-tool-btn" title="SVG 벡터 다운로드" aria-label="SVG 다운로드">${ICON_DOWNLOAD}</button>
+      </div>
+    `;
+
+    // Body
+    const body = document.createElement('div');
+    body.className = 'canvas-card-body';
+    body.title = '클릭하여 전체화면 확대';
+    body.appendChild(svg);
+
+    card.appendChild(header);
+    card.appendChild(body);
+
+    // Footer with takeaway if available
+    if(altText){
+      const footer = document.createElement('div');
+      footer.className = 'canvas-card-footer';
+      footer.innerHTML = `<strong>💡 도면 핵심 요약:</strong> ${altText}`;
+      card.appendChild(footer);
+    }
+
+    // Event wiring
+    const expandBtn = header.querySelector('button[aria-label="확대 보기"]');
+    const dlBtn = header.querySelector('button[aria-label="SVG 다운로드"]');
+
+    expandBtn.addEventListener('click', (e)=>{ e.stopPropagation(); openDiagramZoom(svg); });
+    dlBtn.addEventListener('click', (e)=>{ e.stopPropagation(); exportSvg(svg, 'architecture-diagram'); });
+    body.addEventListener('click', ()=>openDiagramZoom(svg));
+
+    // Replace block content with card
+    block.innerHTML = '';
+    block.appendChild(card);
+    block.dataset.canvasEnhanced = '1';
+  });
+}
+function openDiagramZoom(svgEl){
+  const stage = document.getElementById('diagram-modal-stage');
+  stage.innerHTML = '';
+  stage.appendChild(svgEl.cloneNode(true));
+  diagramZoom = {scale:1, x:0, y:0};
+  applyDiagramZoom();
+  openModal('diagram-modal');
+}
+function applyDiagramZoom(){
+  const stage = document.getElementById('diagram-modal-stage');
+  stage.style.transform = `translate(${diagramZoom.x}px, ${diagramZoom.y}px) scale(${diagramZoom.scale})`;
+  document.getElementById('zoom-level').textContent = Math.round(diagramZoom.scale*100) + '%';
+}
+function wireDiagramZoomControls(){
+  const viewport = document.getElementById('diagram-modal-viewport');
+  viewport.addEventListener('wheel', (e)=>{
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.12 : 0.89;
+    diagramZoom.scale = Math.min(6, Math.max(0.4, diagramZoom.scale*factor));
+    applyDiagramZoom();
+  }, {passive:false});
+  let dragging=false, startX=0, startY=0, originX=0, originY=0;
+  viewport.addEventListener('mousedown', (e)=>{
+    dragging=true; startX=e.clientX; startY=e.clientY; originX=diagramZoom.x; originY=diagramZoom.y;
+    viewport.classList.add('grabbing');
+  });
+  window.addEventListener('mousemove', (e)=>{
+    if(!dragging) return;
+    diagramZoom.x = originX + (e.clientX-startX);
+    diagramZoom.y = originY + (e.clientY-startY);
+    applyDiagramZoom();
+  });
+  window.addEventListener('mouseup', ()=>{ dragging=false; viewport.classList.remove('grabbing'); });
+  document.getElementById('diagram-zoom-in').addEventListener('click', ()=>{ diagramZoom.scale = Math.min(6, diagramZoom.scale*1.25); applyDiagramZoom(); });
+  document.getElementById('diagram-zoom-out').addEventListener('click', ()=>{ diagramZoom.scale = Math.max(0.4, diagramZoom.scale/1.25); applyDiagramZoom(); });
+  document.getElementById('diagram-zoom-reset').addEventListener('click', ()=>{ diagramZoom = {scale:1,x:0,y:0}; applyDiagramZoom(); });
+}
+
+/* ============ HEADING INDEX + TOC ============ */
+function buildHeadingIndex(container, chapterIdx){
+  let counter = 0;
+  return [...container.querySelectorAll('h2, h3')].map(h=>{
+    if(!h.id) h.id = `h-${chapterIdx}-x${counter++}`;
+    return {level: h.tagName, text: h.textContent, id: h.id};
+  });
+}
+function renderTOCInto(el, headIndex){
+  if(!headIndex.length){ el.innerHTML = '<div class="toc-empty">이 챕터에는 하위 섹션이 없습니다</div>'; return; }
+  el.innerHTML = headIndex.map(h=>`<a class="toc-${h.level==='H2'?'h2':'h3'}" data-id="${h.id}" href="#${h.id}">${h.text}</a>`).join('');
+  el.querySelectorAll('a').forEach(a=>a.addEventListener('click',(e)=>{
+    e.preventDefault();
+    const target = document.getElementById(a.dataset.id);
+    if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
+  }));
+}
+function renderTOC(headIndex){
+  renderTOCInto(document.getElementById('toc-list'), headIndex);
+  const mobileList = document.getElementById('toc-list-mobile');
+  if(mobileList) renderTOCInto(mobileList, headIndex);
+}
+
+/* ============ CHAPTER RENDER ============ */
+function renderChapter(idx){
+  currentChapter = idx;
+  localStorage.setItem('lastChapter', String(idx));
+  history.replaceState(null, '', `#ch-${idx}`);
+  const ch = DATA.chapters[idx];
+  const main = document.getElementById('main-content');
+  const prev = DATA.chapters[idx-1];
+  const next = DATA.chapters[idx+1];
+  main.innerHTML = `
+    <div class="breadcrumb"><a data-cover="1" style="cursor:pointer;color:var(--muted);">${DATA.title}</a><span class="sep">›</span>${ch.title}</div>
+    <div class="chapter-eyebrow">CHAPTER ${idx+1}</div>
+    <h1>${parseInlineMarkdown(ch.title)}</h1>
+    <details class="toc-mobile"><summary>이 페이지의 내용</summary><div class="toc-mobile-body" id="toc-list-mobile"></div></details>
+    <div class="motivation"><span class="label">왜 중요한가</span>${parseInlineMarkdown(ch.motivation)}</div>
+    <div id="sections-container"></div>
+    <div id="chart-container"></div>
+    <div id="compare-container"></div>
+    <div class="summary-box"><strong>핵심 요약</strong><ul>${ch.summary.map(s=>`<li>${parseInlineMarkdown(s)}</li>`).join('')}</ul></div>
+    <div><strong>예상 Q&amp;A</strong><div id="qa-container" style="margin-top:12px;"></div></div>
+    <div class="chapter-nav">
+      <div class="chapter-nav-card${prev?'':' disabled'}" id="nav-prev">
+        <div class="chapter-nav-label">◀ 이전</div>
+        <div class="chapter-nav-title">${prev?prev.title:''}</div>
+      </div>
+      <div class="chapter-nav-card next${next?'':' disabled'}" id="nav-next">
+        <div class="chapter-nav-label">다음 ▶</div>
+        <div class="chapter-nav-title">${next?next.title:''}</div>
+      </div>
+    </div>
+  `;
+  main.querySelector('[data-cover]').addEventListener('click', renderCover);
+  document.getElementById('sections-container').innerHTML = ch.sections.map((s,si)=>`<h2 id="section-${idx}-${si}">${s.heading}</h2>${parseInlineMarkdown(s.html)}`).join('');
+  if(prev) document.getElementById('nav-prev').addEventListener('click', ()=>renderChapter(idx-1));
+  if(next) document.getElementById('nav-next').addEventListener('click', ()=>renderChapter(idx+1));
+
+  // footnotes -> popover
+  document.querySelectorAll('#sections-container .fn').forEach(el=>{
+    el.addEventListener('click', (e)=>{ e.stopPropagation(); showFootnotePopover(el, parseInt(el.dataset.ref)); });
+  });
+
+  enhanceCodeBlocks(document.getElementById('sections-container'));
+
+  const chartContainer = document.getElementById('chart-container');
+  (ch.charts||[]).forEach(c=>renderChart(chartContainer, c));
+  const compareContainer = document.getElementById('compare-container');
+  (ch.compareTables||[]).forEach(t=>renderCompareTable(compareContainer, t));
+
+  const qaContainer = document.getElementById('qa-container');
+  (ch.qa||[]).forEach(pair=>{
+    const row = document.createElement('div');
+    row.className='qa-row';
+    row.innerHTML = `<div class="q">Q. ${parseInlineMarkdown(pair.q)}</div><div class="a">A. ${parseInlineMarkdown(pair.a)}</div>`;
+    row.querySelector('.q').addEventListener('click', ()=>row.classList.toggle('open'));
+    qaContainer.appendChild(row);
+  });
+
+  renderMermaidAndZoomButtons();
+  currentHeadIndex = buildHeadingIndex(document.getElementById('sections-container'), idx);
+  renderTOC(currentHeadIndex);
+  setupScrollSpy(currentHeadIndex);
+  renderSidebar();
+  document.getElementById('chapter-pos').textContent = `${idx+1} / ${DATA.chapters.length}`;
+  window.scrollTo(0,0);
+}
+
+/* current-section highlighting in the right TOC as the reader scrolls */
+function setupScrollSpy(headIndex){
+  if(headingObserver) headingObserver.disconnect();
+  if(!headIndex.length) return;
+  headingObserver = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{ if(entry.isIntersecting) setActiveTocLink(entry.target.id); });
+  }, {rootMargin:'-90px 0px -70% 0px', threshold:0});
+  headIndex.forEach(h=>{
+    const el = document.getElementById(h.id);
+    if(el) headingObserver.observe(el);
+  });
+  setActiveTocLink(headIndex[0].id); // sensible default before the reader scrolls
+}
+function setActiveTocLink(id){
+  document.querySelectorAll('#toc-list a, #toc-list-mobile a').forEach(a=>a.classList.toggle('active', a.dataset.id===id));
+}
+
+/* progress bar + resume-scroll persistence */
+window.addEventListener('scroll', ()=>{
+  const h = document.documentElement;
+  const pct = (h.scrollTop || document.body.scrollTop) / ((h.scrollHeight||document.body.scrollHeight) - h.clientHeight) * 100;
+  document.getElementById('progress-bar').style.width = (isFinite(pct)?pct:0) + '%';
+});
+
+/* ============ SEARCH ============ */
+let SEARCH_INDEX = [];
+const CAT_WEIGHT = {'챕터':4,'용어집':3,'비교표':2,'차트':2,'본문':1,'참고문헌':1};
+function buildSearchIndex(){
+  SEARCH_INDEX = [];
+  DATA.chapters.forEach((ch,ci)=>{
+    SEARCH_INDEX.push({cat:'챕터', text:ch.title, chapterIdx:ci});
+    ch.sections.forEach(s=>{
+      const plain = s.html.replace(/<[^>]+>/g,' ');
+      SEARCH_INDEX.push({cat:'본문', text:`${s.heading} — ${plain}`.slice(0,220), chapterIdx:ci});
+    });
+    (ch.compareTables||[]).forEach(t=> SEARCH_INDEX.push({cat:'비교표', text:t.caption+' '+t.verdict, chapterIdx:ci}));
+    (ch.charts||[]).forEach(c=> SEARCH_INDEX.push({cat:'차트', text:c.caption, chapterIdx:ci}));
+  });
+  DATA.glossary.forEach(g=> SEARCH_INDEX.push({cat:'용어집', text:`${g.term} (${g.full}) — ${g.definition}`, chapterIdx:null, term:g.term}));
+  DATA.references.forEach(r=> SEARCH_INDEX.push({cat:'참고문헌', text:r.text, chapterIdx:null, url:r.url}));
+}
+let searchSelIdx = -1;
+function runSearch(q){
+  const results = document.getElementById('search-results');
+  if(!q.trim()){ results.innerHTML=''; results._hits=[]; return; }
+  const ql = q.toLowerCase();
+  const hits = SEARCH_INDEX
+    .map(item=>({item, pos:item.text.toLowerCase().indexOf(ql)}))
+    .filter(h=>h.pos>=0)
+    .sort((a,b)=> (CAT_WEIGHT[b.item.cat]-CAT_WEIGHT[a.item.cat]) || (a.pos-b.pos))
+    .slice(0,20).map(h=>h.item);
+  results.innerHTML = hits.map((h,i)=>{
+    const marked = h.text.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'ig'), m=>`<mark>${m}</mark>`);
+    return `<div class="result-item" data-idx="${i}"><span class="result-badge">${h.cat}</span>${marked}</div>`;
+  }).join('') || '<div style="padding:12px;color:var(--muted);">결과 없음</div>';
+  searchSelIdx = -1;
+  results.querySelectorAll('.result-item').forEach((el,i)=> el.addEventListener('click', ()=>selectSearchResult(hits[i])));
+  results._hits = hits;
+}
+function selectSearchResult(hit){
+  closeModal('search-modal');
+  if(hit.chapterIdx!==null && hit.chapterIdx!==undefined) renderChapter(hit.chapterIdx);
+  else if(hit.term) openGlossary(hit.term);
+  else if(hit.url) window.open(hit.url,'_blank');
+}
+
+/* ============ GLOSSARY ============ */
+function renderGlossary(){
+  const list = document.getElementById('glossary-list');
+  list.innerHTML = [...DATA.glossary].sort((a,b)=>a.term.localeCompare(b.term)).map(g=>`
+    <dt id="gloss-${g.term}">${g.term} <span style="color:var(--muted);font-weight:400;">— ${g.full}</span></dt>
+    <dd>${parseInlineMarkdown(g.definition)}<br><span class="backlink" data-chapters='${JSON.stringify(g.seeIn)}'>등장 위치: ${g.seeIn.join(', ')}</span></dd>
+  `).join('');
+  list.querySelectorAll('.backlink').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const chapters = JSON.parse(el.dataset.chapters);
+      const idx = DATA.chapters.findIndex(c=>c.id===chapters[0]);
+      if(idx>=0){ closeModal('glossary-modal'); renderChapter(idx); }
+    });
+  });
+}
+function openGlossary(highlightTerm){
+  openModal('glossary-modal');
+  const input = document.getElementById('glossary-filter');
+  input.value='';
+  filterGlossary('');
+  setTimeout(()=>input.focus(), 50);
+  if(highlightTerm){
+    const el = document.getElementById('gloss-'+highlightTerm);
+    if(el) el.scrollIntoView({block:'center'});
+  }
+}
+function filterGlossary(q){
+  document.querySelectorAll('#glossary-list dt').forEach(dt=>{
+    const show = dt.textContent.toLowerCase().includes(q.toLowerCase());
+    dt.style.display = show?'':'none';
+    dt.nextElementSibling.style.display = show?'':'none';
+  });
+}
+
+/* ============ REFERENCES ============ */
+function renderReferences(){
+  const list = document.getElementById('references-list');
+  const groups = [['normative','표준/규정 문서 (normative)'], ['informative','참고 문서 (informative)']];
+  list.innerHTML = groups.map(([kind,label])=>{
+    const rows = DATA.references.filter(r=>r.kind===kind);
+    if(!rows.length) return '';
+    return `<div class="ref-group-label">${label}</div>` + rows.map(r=>
+      `<div class="ref-row">[${r.id}] <a href="${r.url}" target="_blank" rel="noopener">${r.text}</a></div>`
+    ).join('');
+  }).join('') || '<div style="padding:16px;color:var(--muted);">등록된 참고문헌이 없습니다</div>';
+}
+
+/* ============ MODAL HELPERS ============ */
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+function wireGlobalEvents(){
+  document.getElementById('overview-link').addEventListener('click', ()=>{ renderCover(); closeSidebarDrawer(); });
+  document.getElementById('hamburger-btn').addEventListener('click', openSidebarDrawer);
+  document.getElementById('sidebar-scrim').addEventListener('click', closeSidebarDrawer);
+  wireDiagramZoomControls();
+  document.getElementById('search-trigger').addEventListener('click', ()=>{openModal('search-modal'); document.getElementById('search-input').focus();});
+  document.getElementById('glossary-trigger').addEventListener('click', ()=>openGlossary());
+  const refTrig = document.getElementById('references-trigger');
+  if(refTrig) refTrig.addEventListener('click', ()=>openModal('references-modal'));
+  const footGloss = document.getElementById('footer-glossary-link');
+  if(footGloss) footGloss.addEventListener('click', ()=>openGlossary());
+  const footRef = document.getElementById('footer-references-link');
+  if(footRef) footRef.addEventListener('click', ()=>openModal('references-modal'));
+  document.querySelectorAll('.modal-close').forEach(btn=>btn.addEventListener('click', ()=>closeModal(btn.dataset.close)));
+  document.getElementById('search-input').addEventListener('input', e=>runSearch(e.target.value));
+  document.getElementById('glossary-filter').addEventListener('input', e=>filterGlossary(e.target.value));
+  document.getElementById('theme-toggle').addEventListener('click', ()=>{
+    const cur = document.documentElement.getAttribute('data-theme')==='dark' ? 'light':'dark';
+    document.documentElement.setAttribute('data-theme', cur);
+    localStorage.setItem('theme', cur);
+    mermaid.initialize({startOnLoad:false, theme: cur==='dark'?'dark':'default'});
+    if(currentChapter===-1) renderCover(); else renderChapter(currentChapter);
+  });
+
+  document.querySelectorAll('[id$="-modal"]').forEach(modal=>{
+    modal.addEventListener('click', e=>{ if(e.target===modal) modal.classList.remove('open'); });
+  });
+  document.addEventListener('click', (e)=>{
+    if(!e.target.closest('.fn') && !e.target.closest('#footnote-popover')) hideFootnotePopover();
+  });
+  window.addEventListener('scroll', hideFootnotePopover);
+
+  document.addEventListener('keydown', (e)=>{
+    const inInput = ['INPUT','TEXTAREA'].includes(document.activeElement.tagName);
+    if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='k'){
+      e.preventDefault(); openModal('search-modal'); document.getElementById('search-input').focus(); return;
+    }
+    if(e.key==='Escape'){ closeModal('search-modal'); closeModal('glossary-modal'); closeModal('references-modal'); closeModal('diagram-modal'); closeSidebarDrawer(); hideFootnotePopover(); return; }
+    if(document.getElementById('search-modal').classList.contains('open')){
+      const results = document.getElementById('search-results');
+      const items = results.querySelectorAll('.result-item');
+      if(e.key==='ArrowDown'){ e.preventDefault(); searchSelIdx=Math.min(searchSelIdx+1, items.length-1); updateSearchSel(items); }
+      if(e.key==='ArrowUp'){ e.preventDefault(); searchSelIdx=Math.max(searchSelIdx-1,0); updateSearchSel(items); }
+      if(e.key==='Enter' && results._hits && searchSelIdx>=0){ selectSearchResult(results._hits[searchSelIdx]); }
+      return;
+    }
+    if(inInput) return;
+    if(e.shiftKey && e.key==='?'){ e.preventDefault(); openGlossary(); return; }
+    if(e.key==='ArrowRight'){ if(currentChapter < DATA.chapters.length-1) renderChapter(currentChapter+1); }
+    if(e.key==='ArrowLeft'){ if(currentChapter > 0) renderChapter(currentChapter-1); else if(currentChapter===0) renderCover(); }
+  });
+}
+function updateSearchSel(items){
+  items.forEach(it=>it.classList.remove('selected'));
+  if(items[searchSelIdx]){ items[searchSelIdx].classList.add('selected'); items[searchSelIdx].scrollIntoView({block:'nearest'}); }
+}
+
+init();
+</script>
+</body>
+</html>
