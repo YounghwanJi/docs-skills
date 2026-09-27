@@ -96,3 +96,8 @@ node_modules/
 .npm
 .yarn/
 .cache/
+
+# ==========================================
+# Generated Study Deliverables & Artifacts
+# ==========================================
+output/
