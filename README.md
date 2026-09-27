@@ -18,6 +18,7 @@
 | :--- | :--- | :--- | :--- |
 | **study-material-generator** | [`skills/study-material-generator/`](./skills/study-material-generator/SKILL.md) | 표준/논문 기반의 기술 주제를 깊이 있게 학습·발표할 수 있는 자급자족형(Single-file) HTML 스터디 문서 생성기 | Claude, Codex, Antigravity |
 | **seminar-material-generator** | [`skills/seminar-material-generator/`](./skills/seminar-material-generator/SKILL.md) | 학회, 기술 컨퍼런스, 사내 세미나 발표를 위한 16:9 와이드스크린 반응형 웹 슬라이드 덱(Presentation Deck) 생성기 | Claude, Codex, Antigravity |
+| **eli5** | [`skills/eli5/`](./skills/eli5/SKILL.md) | [DreambigOu/ELI5](https://github.com/DreambigOu/ELI5)를 기반으로 수정한 스킬로, 5세 어린이부터 비기술직 경영진, 전공자까지 청중별 맞춤형 설명(대화형 답변 및 인터랙티브 웹 익스플레이너 `eli5.html`) 생성 | Claude, Codex, Antigravity |
 
 ---
 
@@ -60,8 +61,28 @@
   - 에이전트에게 주제와 함께 요청:
     > "WebRTC, gRPC, Zenoh 주제에 대해 seminar-material-generator 스킬로 발표 슬라이드 덱 만들어줘."
 
+---
 
+### 📖 스킬 상세 안내: `eli5`
 
+- **개요**: 복잡한 기술 개념, 아키텍처, 코드, 시스템 장애를 특정 대상(5세 어린이, 중고등학생, 비기술직 경영진, 전공자, 가족 등)의 눈높이에 맞춰 직관적인 현실 비유로 설명합니다.
+- **출처 및 기반(Upstream)**: 오픈소스 저장소 [`DreambigOu/ELI5`](https://github.com/DreambigOu/ELI5)의 청중별 프롬프트 지침을 기반으로 도입하였으며, 본 저장소의 `study-material-generator` 디자인 시스템과 결합하여 **독립형 웹 산출물(`eli5.html`) 템플릿, 인터랙티브 청중 탭 전환, CLI 검증 도구**를 추가 구축·수정한 스킬입니다.
+- **주요 기능**:
+  - **이중 전달 모드(Dual Delivery Modes)**:
+    - *대화형 텍스트 모드*: 채팅창 내에서 즉각적이고 명쾌한 비유와 요점 전달
+    - *인터랙티브 웹 익스플레이너(`eli5.html`)*: `study-material-generator`와 100% 동일한 디자인 토큰, Pretendard 폰트, 스마트 캔버스 카드, 라이트/다크 테마가 적용된 단일 독립형 HTML 문서 생성
+  - **인터랙티브 청중 눈높이 탭 전환(Multi-Level Switcher)**: 단일 문서 내에서 상단 탭(`[👦 5세 어린이]` ➔ `[💼 경영진]` ➔ `[💻 엔지니어]`) 클릭 시 새로고침 없이 즉각 해당 청중의 설명·비유·다이어그램으로 전환
+  - **4단계 황금 구조(4-Step Explanation Arc)**:
+    1. *본질 한 줄 정의(The Essence)*: 전문용어를 배제한 핵심 직관 요약
+    2. *현실 비유 스포트라이트 카드(The Analogy)*: 일상 사물에 빗댄 비유와 Mermaid 다이어그램(줌/다운로드 지원)
+    3. *3단계 동작 원리(How It Works)*: 순차적 데이터 흐름 및 메커니즘 분해
+    4. *왜 중요한가(The So What)*: 청중 맞춤형 비즈니스/실생활 가치 결론
+  - **청중 맞춤형 Q&A 아코디언**: 각 청중 수준에서 가장 궁금해할 질문과 명쾌한 답변 제공
+  - **CLI 검증 도구 내장**: `python skills/eli5/scripts/validate-eli5.py <파일>`로 스키마 및 청중 레벨 데이터 정합성 자동 검증
+- **사용 방법**:
+  - 에이전트에게 눈높이와 함께 요청:
+    > "양자 컴퓨터에 대해 5세 어린이와 경영진 눈높이로 eli5 스킬을 써서 HTML 문서로 만들어줘."
+    > "쿠버네티스 원리를 비전공자인 내 팀장님한테 설명하듯 쉽게 풀어서 설명해줘."
 
 ---
 

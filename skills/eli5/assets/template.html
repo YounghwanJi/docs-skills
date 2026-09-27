@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[ELI5] 쉬운 개념 설명</title>
+<!-- Fonts: Pretendard Variable (KR+Latin) + JetBrains Mono (code) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<style>
+/* ============ DESIGN TOKENS (Shared with study-material-generator) ============ */
+:root {
+  --primary: #141414; --accent: #0066ff;
+  --canvas: #ffffff; --canvas-soft: #f8f9fa; --field: #f0f0f0;
+  --hairline-soft: #f0f0f0; --hairline: #e0e0e0;
+  --ink: #141414; --ink-soft: #262626; --muted: #707070; --faint: #adadad;
+  --on-primary: #ffffff;
+  --code-bg: #f0f0f0;
+  --ok: #009E73; --warn: #E69F00; --bad: #D55E00;
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --font-mono: "JetBrains Mono", "D2Coding", monospace;
+}
+:root[data-theme="dark"] {
+  --primary: #ffffff; --accent: #0066ff;
+  --canvas: #0a0a0a; --canvas-soft: #161616; --field: #1e1e1e; --raised: #2a2a2a;
+  --hairline-soft: #222222; --hairline: #333333;
+  --ink: #ffffff; --ink-soft: #e2e2e2; --muted: #adadad; --faint: #707070;
+  --on-primary: #141414;
+  --code-bg: #1e1e1e;
+  --ok: #3DDC97; --warn: #F5B942; --bad: #E8734A;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--canvas); color: var(--ink); font-family: var(--font-sans); }
+body { font-size: 16px; font-weight: 450; line-height: 1.65; }
+h1, h2, h3 { font-weight: 650; line-height: 1.25; margin: 0 0 12px; }
+h1 { font-size: 32px; letter-spacing: -0.5px; }
+h2 { font-size: 22px; margin-top: 40px; margin-bottom: 16px; }
+h3 { font-size: 17px; font-weight: 600; margin-top: 24px; }
+p { margin: 0 0 14px; max-width: 78ch; }
+code { font-family: var(--font-mono); font-size: 13.5px; background: var(--code-bg); padding: 2px 6px; border-radius: 4px; }
+
+/* header */
+header {
+  position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 28px; background: var(--canvas-soft); border-bottom: 1px solid var(--hairline); gap: 16px;
+}
+header .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+header .logo-badge {
+  font-size: 11px; font-weight: 700; background: var(--primary); color: var(--on-primary);
+  padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px; flex-shrink: 0;
+}
+header .doc-title { font-weight: 650; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+header .controls { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+
+.btn { border: none; border-radius: 9999px; padding: 8px 16px; font-family: var(--font-sans); font-weight: 600; font-size: 13px; cursor: pointer; transition: all .15s ease; }
+.btn-outline { background: transparent; color: var(--ink); border: 1px solid var(--hairline); }
+.btn-outline:hover { background: var(--field); border-color: var(--hairline-soft); }
+
+#theme-toggle { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0; border-radius: 9999px; }
+#theme-toggle svg { width: 17px; height: 17px; }
+:root[data-theme="dark"] #theme-toggle .icon-moon { display: none; }
+:root:not([data-theme="dark"]) #theme-toggle .icon-sun { display: none; }
+
+/* layout */
+.container { max-width: 860px; margin: 0 auto; padding: 36px 24px 64px; }
+
+/* audience selector banner */
+.audience-bar {
+  background: var(--canvas-soft); border: 1px solid var(--hairline-soft); border-radius: 16px;
+  padding: 6px; margin-bottom: 28px; display: flex; gap: 6px; overflow-x: auto;
+}
+.audience-tab {
+  flex: 1; min-width: 120px; display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 14px; border-radius: 12px; font-size: 13.5px; font-weight: 600; color: var(--muted);
+  background: transparent; border: none; cursor: pointer; transition: all .15s ease; white-space: nowrap;
+}
+.audience-tab:hover { color: var(--ink); background: var(--field); }
+.audience-tab.active { background: var(--primary); color: var(--on-primary); box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+.audience-tab.active .tab-icon { transform: scale(1.1); }
+
+/* hero section */
+.hero { margin-bottom: 32px; }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 650;
+  color: var(--muted); background: var(--field); padding: 4px 10px; border-radius: 9999px; margin-bottom: 12px;
+}
+.hero-title { font-size: 32px; margin-bottom: 12px; }
+.hero-subtitle { font-size: 15px; color: var(--muted); max-width: 70ch; }
+
+/* the essence box */
+.essence-box {
+  background: var(--canvas-soft); border-left: 4px solid var(--accent); border-radius: 0 16px 16px 0;
+  padding: 20px 24px; margin: 24px 0 32px; box-shadow: 0 1px 3px rgba(0,0,0,.02);
+}
+.essence-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--accent); letter-spacing: 0.5px; margin-bottom: 6px; }
+.essence-text { font-size: 19px; font-weight: 550; line-height: 1.5; color: var(--ink); margin: 0; }
+
+/* smart canvas card (Analogy & Diagrams) */
+.canvas-card {
+  margin: 24px 0; border: 1px solid var(--hairline-soft); border-radius: 16px;
+  background: var(--canvas); overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.03); transition: border-color .15s ease;
+}
+.canvas-card:hover { border-color: var(--hairline); }
+.canvas-card-header {
+  display: flex; justify-content: space-between; align-items: center; padding: 12px 18px;
+  background: var(--canvas-soft); border-bottom: 1px solid var(--hairline-soft);
+}
+.canvas-card-title { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 650; color: var(--ink); }
+.canvas-card-badge { font-size: 11px; font-weight: 700; background: var(--field); color: var(--muted); border-radius: 6px; padding: 2px 8px; }
+.canvas-card-tools { display: flex; align-items: center; gap: 6px; }
+.canvas-tool-btn {
+  display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+  border-radius: 6px; border: 1px solid var(--hairline-soft); background: var(--canvas); color: var(--muted);
+  cursor: pointer; padding: 0; transition: all .15s ease;
+}
+.canvas-tool-btn:hover { background: var(--field); color: var(--ink); border-color: var(--hairline); transform: translateY(-1px); }
+.canvas-tool-btn svg { width: 14px; height: 14px; }
+.canvas-card-body { padding: 22px; overflow-x: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+.canvas-card-body svg { max-width: 100%; height: auto; display: block; }
+.canvas-card-footer {
+  padding: 12px 18px; font-size: 13.5px; color: var(--muted); border-top: 1px solid var(--hairline-soft);
+  background: var(--canvas-soft); line-height: 1.5;
+}
+.canvas-card-footer strong { color: var(--ink); font-weight: 600; }
+
+/* steps grid (How It Works) */
+.steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 20px 0 32px; }
+.step-card {
+  border: 1px solid var(--hairline-soft); border-radius: 14px; padding: 18px 20px;
+  background: var(--canvas); transition: all .15s ease; position: relative;
+}
+.step-card:hover { border-color: var(--hairline); transform: translateY(-2px); box-shadow: 0 3px 8px rgba(0,0,0,.03); }
+.step-badge {
+  display: inline-block; font-size: 11px; font-weight: 700; color: var(--accent);
+  background: rgba(0, 102, 255, 0.08); padding: 3px 8px; border-radius: 6px; margin-bottom: 10px;
+}
+.step-title { font-size: 15px; font-weight: 650; margin-bottom: 8px; color: var(--ink); }
+.step-desc { font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0; }
+
+/* impact callout (The So What) */
+.impact-box {
+  background: var(--canvas-soft); border: 1px solid var(--hairline-soft); border-radius: 16px;
+  padding: 20px 24px; margin: 24px 0 36px;
+}
+.impact-header { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 650; margin-bottom: 8px; color: var(--ink); }
+.impact-body { font-size: 15px; line-height: 1.65; color: var(--ink-soft); margin: 0; }
+
+/* accordion Q&A */
+.qa-wrap { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+.qa-card {
+  border: 1px solid var(--hairline-soft); border-radius: 12px; background: var(--canvas);
+  overflow: hidden; transition: border-color .15s ease;
+}
+.qa-card:hover { border-color: var(--hairline); }
+.qa-question {
+  padding: 14px 18px; font-weight: 600; font-size: 14.5px; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center; user-select: none;
+}
+.qa-question::after { content: "+"; font-size: 18px; font-weight: 400; color: var(--muted); transition: transform .2s ease; }
+.qa-card.open .qa-question::after { transform: rotate(45deg); }
+.qa-answer {
+  display: none; padding: 0 18px 16px; font-size: 14px; color: var(--muted); line-height: 1.6;
+  border-top: 1px dashed var(--hairline-soft); padding-top: 12px;
+}
+.qa-card.open .qa-answer { display: block; }
+
+/* diagram modal */
+#diagram-modal { display: none; position: fixed; inset: 0; background: rgba(10,10,10,.75); z-index: 2500; flex-direction: column; }
+#diagram-modal.open { display: flex; }
+.diagram-modal-toolbar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; color: var(--on-primary); }
+.diagram-modal-toolbar button { background: rgba(255,255,255,.12); color: var(--on-primary); border: none; border-radius: 9999px; width: 32px; height: 32px; font-size: 16px; cursor: pointer; }
+.diagram-modal-toolbar #zoom-level { color: var(--faint); font-size: 13px; min-width: 48px; text-align: center; }
+.diagram-modal-toolbar .modal-close { color: var(--on-primary); margin-left: auto; }
+#diagram-modal-viewport { flex: 1; overflow: hidden; cursor: grab; display: flex; align-items: center; justify-content: center; }
+#diagram-modal-viewport.grabbing { cursor: grabbing; }
+#diagram-modal-stage { transition: transform .05s linear; }
+#diagram-modal-stage svg { max-width: none !important; height: min(80vh, 700px); }
+
+/* footer */
+footer {
+  margin-top: 60px; padding: 20px 24px; border-top: 1px solid var(--hairline);
+  background: var(--canvas-soft); color: var(--muted); font-size: 13px; text-align: center;
+}
+
+@media (max-width: 640px) {
+  header { padding: 10px 16px; }
+  .container { padding: 20px 16px 48px; }
+  .hero-title { font-size: 26px; }
+  .essence-text { font-size: 17px; }
+  .steps-grid { grid-template-columns: 1fr; }
+}
+
+@media print {
+  header, footer, .audience-bar, #diagram-modal, .canvas-card-tools { display: none !important; }
+  .container { max-width: 100%; padding: 0; }
+  .canvas-card { border: 1px solid #ccc; box-shadow: none; break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="logo-badge">ELI5</span>
+    <span class="doc-title" id="header-title">쉬운 개념 설명</span>
+  </div>
+  <div class="controls">
+    <span class="hero-eyebrow" id="header-audience-badge" style="margin-bottom:0;">대상 청중</span>
+    <button class="btn btn-outline" id="theme-toggle" aria-label="테마 전환">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>
+    </button>
+  </div>
+</header>
+
+<main class="container">
+  <!-- Multi-Level Audience Switcher (Auto-hidden if only 1 level) -->
+  <nav class="audience-bar" id="audience-bar" style="display:none;" aria-label="청중 눈높이 선택"></nav>
+
+  <!-- Hero Header -->
+  <section class="hero">
+    <div class="hero-eyebrow" id="current-badge">👦 5세 어린이 눈높이</div>
+    <h1 class="hero-title" id="topic-title">주제 제목</h1>
+    <p class="hero-subtitle" id="topic-subtitle">주제에 대한 친절한 개요 설명</p>
+  </section>
+
+  <!-- The Essence -->
+  <div class="essence-box">
+    <div class="essence-label">핵심 한 줄 요약 (The Essence)</div>
+    <p class="essence-text" id="essence-text">핵심 개념을 누구나 이해할 수 있게 한 문장으로 정의합니다.</p>
+  </div>
+
+  <!-- The Analogy Spotlight -->
+  <h2>💡 현실 세계 비유로 쉽게 보기</h2>
+  <div class="canvas-card" id="analogy-card">
+    <div class="canvas-card-header">
+      <div class="canvas-card-title">
+        <span class="canvas-card-badge">Analogy</span>
+        <span id="analogy-title">일상의 사물에 빗댄 비유</span>
+      </div>
+      <div class="canvas-card-tools" id="analogy-tools" style="display:none;">
+        <button class="canvas-tool-btn" id="btn-zoom" title="확대 보기" aria-label="확대 보기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+        </button>
+        <button class="canvas-tool-btn" id="btn-dl" title="SVG 다운로드" aria-label="SVG 다운로드">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="canvas-card-body" id="analogy-body">
+      <p id="analogy-text" style="font-size:15.5px; line-height:1.7; margin-bottom:16px; width:100%;"></p>
+      <div id="analogy-diagram-wrap" style="width:100%;"></div>
+    </div>
+    <div class="canvas-card-footer" id="analogy-takeaway"></div>
+  </div>
+
+  <!-- How It Works (Steps) -->
+  <h2>⚙️ 어떻게 작동하나요? (3단계 원리)</h2>
+  <div class="steps-grid" id="steps-grid"></div>
+
+  <!-- The "So What" (Why It Matters) -->
+  <h2>🎯 왜 이것이 중요한가요? (나와의 관계)</h2>
+  <div class="impact-box">
+    <div class="impact-header">
+      <span>📌 핵심 가치 및 영향</span>
+    </div>
+    <p class="impact-body" id="impact-body"></p>
+  </div>
+
+  <!-- Common Q&A -->
+  <h2>❓ 자주 묻는 질문 (ELI5 Q&amp;A)</h2>
+  <div class="qa-wrap" id="qa-wrap"></div>
+</main>
+
+<footer>
+  <div id="footer-text">ELI5 Explainer · study-material-generator Design System</div>
+</footer>
+
+<!-- Diagram Zoom Lightbox -->
+<div id="diagram-modal" role="dialog" aria-label="다이어그램 확대 보기">
+  <div class="diagram-modal-toolbar">
+    <button id="diagram-zoom-out" aria-label="축소">−</button>
+    <span id="zoom-level">100%</span>
+    <button id="diagram-zoom-in" aria-label="확대">+</button>
+    <button id="diagram-zoom-reset" aria-label="초기화" style="width:auto;padding:0 12px;">초기화</button>
+    <button class="modal-close" id="modal-close" aria-label="닫기">✕</button>
+  </div>
+  <div id="diagram-modal-viewport"><div id="diagram-modal-stage"></div></div>
+</div>
+
+<!-- ==========================================================================
+     ELI5 CONTENT DATA — JSON schema
+     ========================================================================== -->
+<script type="application/json" id="content-data">
+{
+  "topic": "양자 컴퓨터 (Quantum Computing)",
+  "subtitle": "동전 던지기와 미로 찾기로 배우는 미래의 컴퓨터",
+  "createdDate": "2026-09-27",
+  "levels": [
+    {
+      "id": "age-5",
+      "label": "5세 어린이",
+      "icon": "👦",
+      "badge": "👦 5세 어린이 눈높이",
+      "essence": "일반 컴퓨터는 스위치를 켜고 끄며 하나씩 생각하지만, 양자 컴퓨터는 마법처럼 모든 길을 한 번에 찾아가는 똑똑한 친구예요!",
+      "analogyTitle": "미로를 달리는 마법 쥐와 마법 동전",
+      "analogyText": "상상해 보세요! 장난감 미로가 있어요. 보통 쥐 인형은 길을 찾을 때 오른쪽으로 가보고, 벽에 부딪히면 다시 돌아와서 왼쪽으로 가요. 하나씩 하나씩 가봐야 하죠. 하지만 마법의 양자 쥐는 달라요! 수많은 분신을 만들어서 미로의 모든 길을 <strong>동시에 슈웅~</strong> 달려가서 1초 만에 치즈를 찾아낸답니다!",
+      "analogyTakeaway": "일반 컴퓨터는 하나씩 순서대로 시험해 보지만, 양자 컴퓨터는 모든 길을 동시에 탐색합니다.",
+      "diagram": "graph LR\n  subgraph Normal[\"일반 컴퓨터 (순차 탐색)\"]\n    A[\"출발\"] --> B[\"길 1 탐색 (막다른 길)\"]\n    B --> C[\"길 2 탐색 (치즈 발견)\"]\n  end\n  subgraph Quantum[\"양자 컴퓨터 (동시 탐색)\"]\n    Q[\"출발\"] -->|\"동시에 모든 길 질주\"| S[\"1초 만에 치즈 발견\"]\n  end",
+      "steps": [
+        {
+          "title": "동전 돌리기 (양자 중첩)",
+          "desc": "책상 위에 동전을 가만히 두면 앞면(0) 아니면 뒷면(1)이죠? 그런데 팽이처럼 뱅글뱅글 돌리면 앞면일까요 뒷면일까요? 둘 다이면서 돌고 있죠! 이걸 '중첩'이라고 해요."
+        },
+        {
+          "title": "보이지 않는 무전기 (양자 얽힘)",
+          "desc": "두 친구가 아무리 멀리 떨어져 있어도 하나의 마음으로 연결된 마법 무전기를 가진 것처럼, 한 친구가 웃으면 다른 친구도 동시에 웃어요!"
+        },
+        {
+          "title": "동시에 정답 고르기",
+          "desc": "돌던 동전들이 멈출 때, 가장 맛있는 사탕이 있는 길만 쏙 골라서 알려줘요."
+        }
+      ],
+      "whyItMatters": "아주 어려운 병을 고치는 약이나 맛있는 음식을 만드는 새로운 방법을 컴퓨터가 밤새 기다리지 않고 금방 찾아줄 수 있어요.",
+      "qa": [
+        {
+          "q": "양자 컴퓨터로 유튜브나 게임도 할 수 있나요?",
+          "a": "지금 우리가 쓰는 스마트폰이나 닌텐도로도 게임은 충분히 재미있어요! 양자 컴퓨터는 게임용이 아니라, 아주 크고 어려운 퍼즐을 푸는 특수 연구용 슈퍼 컴퓨터랍니다."
+        },
+        {
+          "q": "집에도 양자 컴퓨터를 둘 수 있나요?",
+          "a": "양자 컴퓨터는 우주보다 더 차가운 냉장고 속에 있어야만 일할 수 있어서, 지금은 연구소에만 있어요."
+        }
+      ]
+    },
+    {
+      "id": "manager",
+      "label": "비기술직 경영진",
+      "icon": "💼",
+      "badge": "💼 경영진 & 비즈니스 리더",
+      "essence": "양자역학의 중첩(Superposition)과 얽힘(Entanglement)을 활용해 기존 슈퍼컴퓨터로 수만 년 걸릴 복잡계 계산을 수분 내로 단축하는 혁신 컴퓨팅 패러다임입니다.",
+      "analogyTitle": "수억 개의 조합을 동시 병렬 연산하는 차세대 프로세서",
+      "analogyText": "신약 후보 물질 탐색이나 물류 최적화처럼 변수가 수천 개인 문제는 기존 2진수(0/1) 슈퍼컴퓨터로도 기하급수적 시간(Exponential Time)이 소요됩니다. 양자 컴퓨터는 큐비트(Qubit)의 중첩 상태를 이용해 2^N개의 상태를 동시에 연산하여 연산 효율의 차원을 바꿉니다.",
+      "analogyTakeaway": "단순 처리 속도(Clock)의 향상이 아니라, 알고리즘 복잡도(O(2^N) ➔ O(√N) / O(N^k))를 파괴하는 전략적 게임 체인저.",
+      "diagram": "graph LR\n  subgraph Classical[\"기존 IT 인프라 한계\"]\n    C1[\"변수 100개 복잡계 최적화\"] --> C2[\"슈퍼컴 1만 년 소요 (연산 병목)\"]\n  end\n  subgraph QuantumAdvantage[\"양자 우위 (Quantum Advantage)\"]\n    Q1[\"양자 병렬 가속 알고리즘\"] --> Q2[\"수시간 내 글로벌 최적해 산출\"]\n  end",
+      "steps": [
+        {
+          "title": "Qubit: 지수적 정보 표현력",
+          "desc": "50큐비트만으로도 약 1,125조 개의 상태를 동시에 표현하며 기존 데이터센터의 한계를 우회합니다."
+        },
+        {
+          "title": "양자 간섭 (Interference)",
+          "desc": "오답 가능성의 위상은 상쇄시키고 정답 상태의 확률만 증폭시켜 정확한 최적해를 도출합니다."
+        },
+        {
+          "title": "산업 적용 도메인",
+          "desc": "배터리 신소재 분자 모델링, 금융 포트폴리오 리스크 최적화, 암호 체계 전환(PQC)이 핵심 축입니다."
+        }
+      ],
+      "whyItMatters": "양자 우위(Quantum Supremacy) 도달 시 신약 개발 주기 80% 단축 및 기존 RSA 암호 무력화에 따른 보안 패러다임 전환이 불가피하므로 선제적 R&D 및 마이그레이션 전략이 필수적입니다.",
+      "qa": [
+        {
+          "q": "현재 비즈니스에 당장 도입 가능한 수준인가요?",
+          "a": "현재는 노이즈가 존재하는 NISQ(Noisy Intermediate-Scale Quantum) 단계로, 하이브리드 클라우드 형태(AWS Braket, IBM Quantum)의 PoC 연구에 집중하는 것이 권장됩니다."
+        },
+        {
+          "q": "기존 암호화 체계(RSA)는 언제 위협받나요?",
+          "a": "쇼어 알고리즘을 수행할 수 있는 수백만 논리 큐비트 도달 시점은 2030년대 중반으로 전망되나, 미 NIST 권고에 따라 양자내성암호(PQC) 전환은 지금 준비해야 합니다."
+        }
+      ]
+    }
+  ]
+}
+</script>
+
+<script>
+/* ============ STATE & PARSER ============ */
+let DATA = null;
+let currentLevelIdx = 0;
+
+function parseInlineMarkdown(str) {
+  if (typeof str !== 'string') return str;
+  return str
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>');
+}
+
+function init() {
+  const dataEl = document.getElementById('content-data');
+  if (!dataEl) return;
+  try {
+    DATA = JSON.parse(dataEl.textContent);
+  } catch (err) {
+    console.error("Failed to parse ELI5 content-data JSON:", err);
+    return;
+  }
+
+  // Theme setup
+  if (!localStorage.getItem('theme') && matchMedia('(prefers-color-scheme: dark)').matches) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+  if (localStorage.getItem('theme')) {
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('theme'));
+  }
+  mermaid.initialize({ startOnLoad: false, theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default' });
+
+  // Wiring global theme toggle
+  document.getElementById('theme-toggle').addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', cur);
+    localStorage.setItem('theme', cur);
+    mermaid.initialize({ startOnLoad: false, theme: cur === 'dark' ? 'dark' : 'default' });
+    renderLevel(currentLevelIdx);
+  });
+
+  // Wire diagram modal controls
+  wireDiagramModal();
+
+  // Render header
+  document.title = `[ELI5] ${DATA.topic}`;
+  document.getElementById('header-title').textContent = DATA.topic;
+  document.getElementById('topic-title').textContent = DATA.topic;
+  document.getElementById('topic-subtitle').textContent = DATA.subtitle || '';
+  document.getElementById('footer-text').textContent = `${DATA.topic} · ELI5 Explainer · 작성일 ${DATA.createdDate || '2026'}`;
+
+  // Render Audience Bar if multiple levels
+  renderAudienceBar();
+
+  // Render initial level
+  renderLevel(0);
+}
+
+function renderAudienceBar() {
+  const bar = document.getElementById('audience-bar');
+  if (!DATA.levels || DATA.levels.length <= 1) {
+    bar.style.display = 'none';
+    return;
+  }
+  bar.style.display = 'flex';
+  bar.innerHTML = DATA.levels.map((lvl, idx) => `
+    <button class="audience-tab${idx === 0 ? ' active' : ''}" data-idx="${idx}">
+      <span class="tab-icon">${lvl.icon || '🎯'}</span>
+      <span>${lvl.label || lvl.id}</span>
+    </button>
+  `).join('');
+
+  bar.querySelectorAll('.audience-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx);
+      bar.querySelectorAll('.audience-tab').forEach(b => b.classList.toggle('active', b === btn));
+      renderLevel(idx);
+    });
+  });
+}
+
+async function renderLevel(idx) {
+  currentLevelIdx = idx;
+  const lvl = DATA.levels[idx];
+  if (!lvl) return;
+
+  // Header badges
+  const badgeText = lvl.badge || `${lvl.icon || '🎯'} ${lvl.label}`;
+  document.getElementById('header-audience-badge').textContent = badgeText;
+  document.getElementById('current-badge').textContent = badgeText;
+
+  // Essence
+  document.getElementById('essence-text').innerHTML = parseInlineMarkdown(lvl.essence);
+
+  // Analogy
+  document.getElementById('analogy-title').textContent = lvl.analogyTitle || '일상의 사물에 빗댄 비유';
+  document.getElementById('analogy-text').innerHTML = parseInlineMarkdown(lvl.analogyText);
+  document.getElementById('analogy-takeaway').innerHTML = `<strong>💡 핵심 비유 결론:</strong> ${parseInlineMarkdown(lvl.analogyTakeaway || '')}`;
+
+  // Analogy diagram
+  const diagWrap = document.getElementById('analogy-diagram-wrap');
+  const tools = document.getElementById('analogy-tools');
+  diagWrap.innerHTML = '';
+  if (lvl.diagram && lvl.diagram.trim()) {
+    tools.style.display = 'flex';
+    try {
+      const renderId = 'mermaid-' + Math.random().toString(36).substring(2, 9);
+      const { svg } = await mermaid.render(renderId, lvl.diagram.trim());
+      diagWrap.innerHTML = svg;
+      const svgEl = diagWrap.querySelector('svg');
+      if (svgEl) {
+        document.getElementById('btn-zoom').onclick = () => openDiagramZoom(svgEl);
+        document.getElementById('btn-dl').onclick = () => exportSvg(svgEl, `${DATA.topic}-analogy`);
+      }
+    } catch (e) {
+      console.warn("Mermaid render error:", e);
+      tools.style.display = 'none';
+      diagWrap.innerHTML = `<div style="padding:14px;color:var(--muted);font-size:13px;border:1px dashed var(--hairline);border-radius:8px;text-align:center;">다이어그램 렌더링을 불러올 수 없습니다.</div>`;
+    }
+  } else {
+    tools.style.display = 'none';
+  }
+
+  // Steps (How It Works)
+  const stepsGrid = document.getElementById('steps-grid');
+  stepsGrid.innerHTML = (lvl.steps || []).map((step, sIdx) => `
+    <div class="step-card">
+      <span class="step-badge">STEP ${sIdx + 1}</span>
+      <div class="step-title">${step.title}</div>
+      <p class="step-desc">${parseInlineMarkdown(step.desc)}</p>
+    </div>
+  `).join('');
+
+  // The "So What"
+  document.getElementById('impact-body').innerHTML = parseInlineMarkdown(lvl.whyItMatters);
+
+  // Q&A
+  const qaWrap = document.getElementById('qa-wrap');
+  qaWrap.innerHTML = (lvl.qa || []).map(q => `
+    <div class="qa-card">
+      <div class="qa-question">Q. ${parseInlineMarkdown(q.q)}</div>
+      <div class="qa-answer">A. ${parseInlineMarkdown(q.a)}</div>
+    </div>
+  `).join('');
+
+  qaWrap.querySelectorAll('.qa-question').forEach(el => {
+    el.addEventListener('click', () => {
+      el.parentElement.classList.toggle('open');
+    });
+  });
+}
+
+/* ============ DIAGRAM ZOOM & EXPORT ============ */
+let diagramZoom = { scale: 1, x: 0, y: 0 };
+function openDiagramZoom(svgEl) {
+  const stage = document.getElementById('diagram-modal-stage');
+  stage.innerHTML = '';
+  stage.appendChild(svgEl.cloneNode(true));
+  diagramZoom = { scale: 1, x: 0, y: 0 };
+  applyDiagramZoom();
+  document.getElementById('diagram-modal').classList.add('open');
+}
+
+function applyDiagramZoom() {
+  const stage = document.getElementById('diagram-modal-stage');
+  stage.style.transform = `translate(${diagramZoom.x}px, ${diagramZoom.y}px) scale(${diagramZoom.scale})`;
+  document.getElementById('zoom-level').textContent = Math.round(diagramZoom.scale * 100) + '%';
+}
+
+function wireDiagramModal() {
+  const modal = document.getElementById('diagram-modal');
+  const viewport = document.getElementById('diagram-modal-viewport');
+  document.getElementById('modal-close').addEventListener('click', () => modal.classList.remove('open'));
+
+  viewport.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.12 : 0.89;
+    diagramZoom.scale = Math.min(6, Math.max(0.4, diagramZoom.scale * factor));
+    applyDiagramZoom();
+  }, { passive: false });
+
+  let dragging = false, startX = 0, startY = 0, originX = 0, originY = 0;
+  viewport.addEventListener('mousedown', (e) => {
+    dragging = true; startX = e.clientX; startY = e.clientY; originX = diagramZoom.x; originY = diagramZoom.y;
+    viewport.classList.add('grabbing');
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    diagramZoom.x = originX + (e.clientX - startX);
+    diagramZoom.y = originY + (e.clientY - startY);
+    applyDiagramZoom();
+  });
+  window.addEventListener('mouseup', () => { dragging = false; viewport.classList.remove('grabbing'); });
+
+  document.getElementById('diagram-zoom-in').addEventListener('click', () => { diagramZoom.scale = Math.min(6, diagramZoom.scale * 1.25); applyDiagramZoom(); });
+  document.getElementById('diagram-zoom-out').addEventListener('click', () => { diagramZoom.scale = Math.max(0.4, diagramZoom.scale / 1.25); applyDiagramZoom(); });
+  document.getElementById('diagram-zoom-reset').addEventListener('click', () => { diagramZoom = { scale: 1, x: 0, y: 0 }; applyDiagramZoom(); });
+}
+
+function exportSvg(svgNode, name) {
+  const source = new XMLSerializer().serializeToString(svgNode);
+  const blob = new Blob([source], { type: 'image/svg+xml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `${name}.svg`; a.click();
+  URL.revokeObjectURL(url);
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
