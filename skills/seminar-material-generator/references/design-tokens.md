@@ -73,3 +73,55 @@
 - **Bullet Text**: `20px~24px`
 - **Code / Monospace**: `18px~20px` (JetBrains Mono)
 - **Footnotes & Citations**: `14px~16px` (Text-muted)
+
+---
+
+## 4. Docs/Handout 모드 타이포그래피 & 여백
+- **본문 (`.docs-prose`)**: `19px` (Line-height `1.8`, `word-break: keep-all; overflow-wrap: break-word;`)
+- **단락 여백**: `margin-bottom: 18px; max-width: 78ch;`
+- **리스트 아이템**: `18px` (Line-height `1.65`, Gap `12px`)
+
+---
+
+## 5. 텍스트 선택 & 모션 접근성
+- **Text Selection**:
+  ```css
+  ::selection {
+    background: rgba(99, 102, 241, 0.25);
+    color: var(--text-primary);
+  }
+  ```
+- **Motion Accessibility (`prefers-reduced-motion: reduce`)**:
+  - `transform` 및 모든 인터랙션 확장 전환을 비활성화하되, 발표 슬라이드 전환의 급격한 깜빡임을 방지하기 위해 `.slide`의 `opacity` 전환(`0.15s ease`)은 부드럽게 유지.
+
+---
+
+## 6. 테이블 경계선 대비 규격 (Table Contrast)
+- 다크 모드 `bitfield-table`:
+  - `th`: `border-bottom: 2px solid #4a4a4a; border-right: 1px solid #444;`
+  - `td`: `border-right: 1px solid #3a3a3a; border-bottom: 1px solid #3a3a3a;`
+  - 하이라이트 셀: `background: var(--accent-subtle); color: var(--accent-primary); font-weight: 800;`
+
+---
+
+## 7. 슬라이드 전환 애니메이션 & 제어 인터랙션 (Transitions & Navigation)
+- **뎁스 앤 블러 슬라이드 전환 애니메이션 (Depth & Frosted Blur Transition)**:
+  - **전환 메커니즘**: 슬라이드 이동 시 현재 슬라이드는 깊이감 있게 뒤로 축소(`scale(0.85)`)되며 은은한 가우시안 블러(`filter: blur(16px)`)와 함께 페이드아웃되고, 대상 슬라이드는 전면으로 자연스럽게 확대(`scale(1)`)되며 선명하게 포커싱(`filter: blur(0px)`).
+  - **퇴장 잔상 보존**: `visibility 0.45s` 트랜지션을 명시하여 퇴장 슬라이드의 블러/스케일 아웃이 씹히지 않고 부드럽게 퇴장.
+  - **타이밍 및 이징**: `transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), filter 0.45s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.45s cubic-bezier(0.16, 1, 0.3, 1);`
+  - **방향성 패럴랙스 (Directional Parallax)**:
+    - 다음 슬라이드(`.slide.next`): `transform: scale(0.85) translate3d(60px, 0, 0); filter: blur(16px);`
+    - 이전 슬라이드(`.slide.prev`): `transform: scale(0.85) translate3d(-60px, 0, 0); filter: blur(16px);`
+    - 활성 슬라이드(`.slide.active`): `transform: scale(1) translate3d(0, 0, 0); filter: blur(0);`
+  - **모션 접근성 (`prefers-reduced-motion: reduce`)**: `filter: none !important; transform: none !important; transition: opacity 0.15s ease !important;`
+- **스마트 하단 가이드 바 마우스 호버 전용 인터랙션 (Hover-Only Bottom Control Bar)**:
+  - **기본 상태 (Hidden)**: 슬라이드 몰입도를 위해 평상시 화면 하단 밖으로 완벽 숨김(`transform: translateX(-50%) translateY(calc(100% + 36px)); opacity: 0; pointer-events: none;`). 슬라이드 넘김 시에도 노출되지 않음.
+  - **하단 진입 감지 (Bottom Hover Reveal)**: 마우스 커서가 화면 맨 아래쪽(하단 $90\text{px}$ 이내)으로 직접 내려가거나 컨트롤 바 위에 호버/포커스될 때만 부드럽게 위로 슬라이드 업(`transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto;`).
+  - **이탈 시 자동 숨김**: 마우스가 하단 영역을 벗어나면 즉시 다시 아래로 부드럽게 퇴장(`0.35s cubic-bezier(0.16, 1, 0.3, 1)`).
+- **마우스 휠 스크롤 네비게이션 (Wheel Navigation)**:
+  - 휠 아래로 스크롤: `nextSlide()`
+  - 휠 위로 스크롤: `prevSlide()`
+  - **폭주 방지 쿨다운 락 (Wheel Throttle Lock)**: 트랙패드 및 관성 휠 연속 발화를 방지하기 위해 $400\text{ms}$ 쿨다운 및 역치($|\Delta y| \ge 15$) 적용
+  - **스마트 스크롤 보호**: Docs 모드, 슬라이드 개요 모달, 도움말 모달 활성화 시 슬라이드 전환을 유예하고 기본 스크롤 동작 보장
+- **모바일 터치 스와이프 (Touch Navigation)**:
+  - 가로 스와이프($|\Delta x| > 50\text{px}$) 감지하여 모바일/태블릿에서도 직관적인 슬라이드 전환 지원

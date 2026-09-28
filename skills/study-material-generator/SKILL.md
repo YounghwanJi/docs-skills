@@ -59,9 +59,16 @@ This skill's description of the intended reader/listener (a less experienced per
   - **Network boundary & traversal**: Firewall traversal, NAT handling, dynamic port allocations, and fallback strategies for restricted corporate networks.
   - **Cloud-native deployment topology**: Container networking modes (host networking vs overlay CNI overhead), latency-accelerated edge routing, hybrid WAN interconnects, and egress bandwidth cost optimization.
 
+- **가독성 타이포그래피 및 소스 코드 줄바꿈 원칙 (Typography & Code Readability Principle)**:
+  - 본문 텍스트는 편안한 가독성을 위해 $18\sim 19\text{px}$, 줄간격 $1.75\sim 1.85$, 단락 간격 $24\sim 28\text{px}$, 가독 칼럼 너비 $72\sim 80\text{ch}$를 준수합니다.
+  - 한글 어절 끊김 방지를 위해 `word-break: keep-all; overflow-wrap: break-word;`를 적용합니다.
+  - 소스 코드 및 페이로드 블록(`pre`, `code`)은 가로 스크롤로 인한 내용 잘림을 방지하기 위해 자동 줄바꿈(`white-space: pre-wrap; word-break: break-all;`)을 적용하여 좁은 화면에서도 전문을 한눈에 열람할 수 있도록 합니다.
+
+- **고대비 테이블 및 다이어그램 확대 캔버스 원칙 (High-Contrast Tables & Light Canvas Modal Principle)**:
+  - 모든 표(비트필드, 비교 매트릭스)는 다크/라이트 테마 모두에서 경계선(`border`)이 또렷하게 드러나도록 고대비 테두리 스타일을 유지합니다.
+  - 다이어그램은 컨테이너 내에서 오버플로우 없이 최적 크기로 자동 핏팅(`getBBox()` viewBox 보정)되어야 하며, 확대 버튼 클릭 시 다크 모드 상태여도 가독성을 극대화하기 위해 **순백색(#ffffff)의 깨끗한 고대비 라이트 캔버스 모달**로 렌더링되어야 합니다.
 
 
-## When to push back / ask
 
 - If the user names a very broad subject ("스터디 자료 만들어줘: 네트워킹") without a chapter scope, ask for the intended chapter breakdown or a target audience level before generating — a directionless generation wastes their review time.
 - If a claim can't be sourced after a reasonable search, say so in the content rather than guessing a number ("정확한 수치는 공개 자료에서 확인되지 않음 — 정성적 설명으로 대체").

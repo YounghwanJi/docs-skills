@@ -74,7 +74,20 @@ Compare-table cells wrap normally instead of truncating with `…`. Each cell me
 ## Mermaid diagram zoom
 Every rendered Mermaid diagram gets a "🔍 확대 보기" button beneath it. Clicking opens a full-screen lightbox with: mouse-wheel zoom (zooms toward the pointer's general area, clamped 40%–600%), click-and-drag panning, +/− buttons, a reset button, and the usual Esc/backdrop-click/✕ close. The lightbox operates on a clone of the already-rendered SVG, so it works offline with no extra network calls.
 
+## Code block copy button
+Every code block header includes a "복사" button. Clicking copies raw code to the clipboard via `navigator.clipboard.writeText`, changes label to "✓ 복사됨", and reverts back to "복사" after 1.5 seconds.
+
+## Diagram zoom & touch gestures
+The full-screen diagram lightbox supports:
+- Mouse wheel zooming (clamped 40%–600%) and mouse drag panning.
+- Mobile/tablet touch: 1-finger drag panning and 2-finger pinch-to-zoom.
+- Toolbar buttons (+, −, 초기화, 닫기) and `Esc` key / backdrop click to exit.
+
+## Smooth theme transition
+When toggling theme, `html.theme-transitioning` is temporarily applied for 350ms to ensure a smooth, flicker-free color and background transition.
+
 ## Accessibility
 - A "본문으로 건너뛰기" skip link is the first focusable element on the page.
 - All interactive elements get a visible `:focus-visible` outline.
 - Compare-table and chart SVGs carry `role="img"`, an `aria-label`, and a `<title>` element for assistive tech.
+- `@media (prefers-reduced-motion: reduce)` disables non-essential animations and transitions for motion-sensitive users.

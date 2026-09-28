@@ -57,6 +57,10 @@
       color: var(--text-primary);
       font-family: var(--font-sans);
     }
+    ::selection {
+      background: rgba(99, 102, 241, 0.25);
+      color: var(--text-primary);
+    }
 
     /* ----------------------------------------------------
        MODE 1: SLIDE PRESENTATION VIEW
@@ -92,20 +96,56 @@
     .slide {
       width: 100%; height: 100%;
       padding: 60px 80px 40px 80px;
-      display: none;
+      display: flex;
       flex-direction: column;
       position: absolute;
       top: 0; left: 0;
       opacity: 0;
-      transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-      transform: translateY(8px);
+      pointer-events: none;
+      visibility: hidden;
+      transform: scale(0.85) translate3d(60px, 0, 0);
+      filter: blur(16px);
+      transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), 
+                  transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), 
+                  filter 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                  visibility 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform, opacity, filter;
+      z-index: 1;
     }
 
     .slide.active {
-      display: flex;
       opacity: 1;
-      transform: translateY(0);
+      pointer-events: auto;
+      visibility: visible;
+      transform: scale(1) translate3d(0, 0, 0);
+      filter: blur(0px);
       z-index: 10;
+    }
+
+    .slide.prev {
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+      transform: scale(0.85) translate3d(-60px, 0, 0);
+      filter: blur(16px);
+      z-index: 1;
+    }
+
+    .slide.next {
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+      transform: scale(0.85) translate3d(60px, 0, 0);
+      filter: blur(16px);
+      z-index: 1;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .slide {
+        transition: opacity 0.15s ease !important;
+        transform: none !important;
+        filter: none !important;
+      }
     }
 
     /* Security Classification Badge (Header Top Center) */
@@ -414,36 +454,56 @@
       color: var(--accent-primary);
       border-color: var(--accent-primary);
     }
+    .slide-canvas-card {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      overflow: hidden;
+      min-width: 0;
+      min-height: 0;
+    }
     .slide-canvas-body {
       flex: 1;
       width: 100%;
       height: 100%;
-      min-height: 560px;
-      overflow: visible;
-      padding: 20px;
+      min-height: 0;
+      overflow: hidden;
+      padding: 24px 20px;
       display: flex;
       align-items: center;
       justify-content: center;
+      position: relative;
+    }
+    .mermaid-target {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
     }
     .slide-canvas-body svg {
       width: 100% !important;
-      height: 100% !important;
-      min-height: 540px !important;
       max-width: 100% !important;
-      object-fit: contain;
+      height: auto !important;
+      max-height: 100% !important;
+      object-fit: contain !important;
+      display: block;
+      margin: auto;
     }
 
     /* Full Diagram Slide (85% Maximum Canvas) */
     .slide-full-diagram .slide-body {
       height: 100%;
-      min-height: 800px;
     }
     .slide-full-diagram .slide-canvas-card {
       height: 100%;
-      min-height: 780px;
     }
     .slide-full-diagram .slide-canvas-body svg {
-      min-height: 720px !important;
+      max-height: 100% !important;
     }
 
     /* Universal Mermaid Styles & Legibility Engine */
@@ -565,6 +625,16 @@
       color: var(--text-primary);
       font-size: 18px;
     }
+    [data-theme="dark"] .bitfield-table th,
+    :root:not([data-theme="light"]) .bitfield-table th {
+      border-bottom: 2px solid #4a4a4a;
+      border-right: 1px solid #444;
+    }
+    [data-theme="dark"] .bitfield-table td,
+    :root:not([data-theme="light"]) .bitfield-table td {
+      border-right: 1px solid #3a3a3a;
+      border-bottom: 1px solid #3a3a3a;
+    }
     .bitfield-table td.highlight {
       background: var(--accent-subtle);
       color: var(--accent-primary);
@@ -596,13 +666,13 @@
     }
 
     /* ----------------------------------------------------
-       Floating Presentation Control Bar
+       Floating Presentation Control Bar (Auto-hiding on Bottom Hover)
        ---------------------------------------------------- */
     #bottom-control-bar {
       position: fixed;
       bottom: 24px;
       left: 50%;
-      transform: translateX(-50%);
+      transform: translateX(-50%) translateY(calc(100% + 36px));
       background: rgba(15, 23, 42, 0.92);
       backdrop-filter: blur(14px);
       border: 1px solid var(--border-strong);
@@ -612,15 +682,20 @@
       align-items: center;
       gap: 12px;
       z-index: 1000;
-      opacity: 0.65;
-      transition: opacity 0.25s ease, transform 0.25s ease, background 0.2s ease;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+                  transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                  background 0.2s ease;
       color: var(--text-primary);
       box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4);
     }
-    #stage-container:hover #bottom-control-bar,
-    #bottom-control-bar:hover {
+
+    #bottom-control-bar.visible,
+    #bottom-control-bar:focus-within {
       opacity: 1;
-      transform: translateX(-50%) translateY(-2px);
+      pointer-events: auto;
+      transform: translateX(-50%) translateY(0);
     }
 
     [data-theme="light"] #bottom-control-bar {
@@ -832,6 +907,15 @@
       line-height: 1.8;
       color: var(--text-primary);
       margin-bottom: 28px;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+    .docs-prose p {
+      margin-bottom: 18px;
+      max-width: 78ch;
+    }
+    .docs-prose a {
+      word-break: break-all;
     }
     [data-theme="light"] .docs-prose { color: #1e293b; }
     .docs-prose ul {
@@ -1217,6 +1301,23 @@
         color: #1e293b !important;
       }
     }
+
+    /* Motion Accessibility */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+      .slide {
+        transition: opacity 0.15s ease !important;
+        transform: none !important;
+      }
+      .btn:hover, .quick-card:hover, .overview-thumbnail:hover {
+        transform: none !important;
+      }
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
@@ -1283,6 +1384,7 @@
       <div class="help-grid">
         <div class="help-item"><span>다음 슬라이드</span><span class="kbd">Space / → / PgDn</span></div>
         <div class="help-item"><span>이전 슬라이드</span><span class="kbd">← / PgUp</span></div>
+        <div class="help-item"><span>마우스 스크롤 이동</span><span class="kbd">Wheel Up / Down</span></div>
         <div class="help-item"><span>Docs 모드 (기술 문서 뷰)</span><span class="kbd">D</span></div>
         <div class="help-item"><span>발표자 모드 (대본/타이머)</span><span class="kbd">P</span></div>
         <div class="help-item"><span>전체 슬라이드 오버뷰</span><span class="kbd">O / Esc</span></div>
@@ -1340,11 +1442,58 @@
 
     const viewport = document.getElementById('slide-viewport');
     const counterEl = document.getElementById('slide-counter');
+    const bottomControlBar = document.getElementById('bottom-control-bar');
     const overviewModal = document.getElementById('overview-modal');
     const overviewGrid = document.getElementById('overview-grid-container');
     const helpModal = document.getElementById('help-modal');
     const blackOverlay = document.getElementById('black-overlay');
     const docsContentArea = document.getElementById('docs-content-area');
+
+    let controlBarTimeout = null;
+    let isMouseAtBottom = false;
+
+    function showControlBar(autoHide = true) {
+      if (isDocsMode || !bottomControlBar) return;
+      bottomControlBar.classList.add('visible');
+      clearTimeout(controlBarTimeout);
+      if (autoHide) {
+        controlBarTimeout = setTimeout(() => {
+          if (!isMouseAtBottom && bottomControlBar && !bottomControlBar.matches(':hover') && !bottomControlBar.matches(':focus-within')) {
+            bottomControlBar.classList.remove('visible');
+          }
+        }, 2200);
+      }
+    }
+
+    function hideControlBar() {
+      if (!bottomControlBar) return;
+      bottomControlBar.classList.remove('visible');
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      if (isDocsMode || !bottomControlBar) return;
+      const threshold = window.innerHeight - 90;
+      if (e.clientY >= threshold) {
+        isMouseAtBottom = true;
+        bottomControlBar.classList.add('visible');
+      } else {
+        isMouseAtBottom = false;
+        if (!bottomControlBar.matches(':hover') && !bottomControlBar.matches(':focus-within')) {
+          bottomControlBar.classList.remove('visible');
+        }
+      }
+    }, { passive: true });
+
+    if (bottomControlBar) {
+      bottomControlBar.addEventListener('mouseenter', () => {
+        isMouseAtBottom = true;
+        bottomControlBar.classList.add('visible');
+      });
+      bottomControlBar.addEventListener('mouseleave', () => {
+        isMouseAtBottom = false;
+        bottomControlBar.classList.remove('visible');
+      });
+    }
 
     try {
       presenterChannel = new BroadcastChannel('seminar_slides_sync');
@@ -1696,12 +1845,20 @@
           el.innerHTML = svg;
           const svgEl = el.querySelector('svg');
           if (svgEl) {
+            try {
+              const bbox = svgEl.getBBox();
+              if (bbox && bbox.width > 0 && bbox.height > 0) {
+                const pad = 24;
+                svgEl.setAttribute('viewBox', `${Math.floor(bbox.x - pad)} ${Math.floor(bbox.y - pad)} ${Math.ceil(bbox.width + pad * 2)} ${Math.ceil(bbox.height + pad * 2)}`);
+              }
+            } catch(e) {}
             svgEl.removeAttribute('height');
             svgEl.removeAttribute('width');
             svgEl.style.width = '100%';
-            svgEl.style.height = '100%';
+            svgEl.style.height = 'auto';
             svgEl.style.maxWidth = '100%';
-            svgEl.style.minHeight = '520px';
+            svgEl.style.maxHeight = '100%';
+            svgEl.style.objectFit = 'contain';
           }
         } catch(e) {
           console.warn("Mermaid render error for target:", e);
@@ -1709,7 +1866,7 @@
       }
     }
 
-    // Slide Navigation
+    // Slide Navigation with Smooth 3-State Directional Transitions
     async function goToSlide(idx, broadcast = true) {
       if (!presentationData || !presentationData.slides) return;
       if (idx < 0) idx = 0;
@@ -1718,9 +1875,16 @@
       const slides = document.querySelectorAll('.slide');
       for (let i = 0; i < slides.length; i++) {
         const s = slides[i];
-        s.classList.toggle('active', i === idx);
         if (i === idx) {
-          await renderMermaidInElement(s);
+          s.classList.remove('prev', 'next');
+          s.classList.add('active');
+          renderMermaidInElement(s);
+        } else if (i < idx) {
+          s.classList.remove('active', 'next');
+          s.classList.add('prev');
+        } else {
+          s.classList.remove('active', 'prev');
+          s.classList.add('next');
         }
       }
 
@@ -1738,6 +1902,10 @@
 
     function nextSlide() { goToSlide(currentSlideIdx + 1); }
     function prevSlide() { goToSlide(currentSlideIdx - 1); }
+
+    window.goToSlide = goToSlide;
+    window.nextSlide = nextSlide;
+    window.prevSlide = prevSlide;
 
     // Toggle Docs Mode
     async function toggleDocsMode(forceDocs = null) {
@@ -1987,6 +2155,53 @@
       if (!document.fullscreenElement) document.documentElement.requestFullscreen();
       else document.exitFullscreen();
     };
+
+    // Wheel Navigation (Throttled & Responsive)
+    let wheelLock = false;
+    let wheelTimeout = null;
+
+    window.addEventListener('wheel', (e) => {
+      const isModalOpen = (overviewModal && overviewModal.classList.contains('open')) ||
+                          (helpModal && helpModal.classList.contains('open'));
+      if (isDocsMode || isModalOpen) return;
+      if (wheelLock) return;
+      if (Math.abs(e.deltaY) < 15) return;
+
+      wheelLock = true;
+      if (e.deltaY > 0) {
+        nextSlide();
+      } else {
+        prevSlide();
+      }
+
+      clearTimeout(wheelTimeout);
+      wheelTimeout = setTimeout(() => {
+        wheelLock = false;
+      }, 400);
+    }, { passive: true });
+
+    // Touch swipe navigation for presentation mode (Mobile / Tablet)
+    let touchStartX = 0;
+    let touchStartY = 0;
+    window.addEventListener('touchstart', (e) => {
+      const isModalOpen = (overviewModal && overviewModal.classList.contains('open')) ||
+                          (helpModal && helpModal.classList.contains('open'));
+      if (isDocsMode || isModalOpen || e.touches.length !== 1) return;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    window.addEventListener('touchend', (e) => {
+      const isModalOpen = (overviewModal && overviewModal.classList.contains('open')) ||
+                          (helpModal && helpModal.classList.contains('open'));
+      if (isDocsMode || isModalOpen || e.changedTouches.length !== 1) return;
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        if (dx < 0) nextSlide();
+        else prevSlide();
+      }
+    }, { passive: true });
 
     // SVG Export
     window.exportSlideSVG = function(targetId) {

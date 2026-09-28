@@ -65,6 +65,7 @@ When the user asks for a document, HTML file, or visual guide:
 1. **Design System & Template**:
    - Use `assets/template.html` as the base scaffold.
    - It incorporates the unified design system from `references/design-tokens.md` (Pretendard Variable font, JetBrains Mono, Okabe-Ito semantic palette, and dark/light mode toggle).
+   - Inherits the core readability principles from `study-material-generator`: optimal Korean typography ($18\sim 19\text{px}$, line-height $1.75\sim 1.85$, `word-break: keep-all`), responsive code blocks (`white-space: pre-wrap; word-break: break-all;`), high-contrast table borders, and pure white (#ffffff) canvas modals for enlarged diagram inspection.
 2. **Populate Embedded `#content-data` JSON**:
    - Inject the JSON structure into `<script type="application/json" id="content-data">`:
      ```json
