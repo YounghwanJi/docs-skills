@@ -1,6 +1,6 @@
 ---
 name: study-material-generator
-description: Generate a single self-contained HTML study document for a technical topic (protocols, standards, algorithms, architectures) that a junior researcher (학사) can study from and then present to senior researchers (석·박사). Use whenever the user asks to build study material, a study guide, technical reference doc, or "스터디 자료" as an HTML deliverable — especially when they want RFC/standard/paper-grounded quantitative content, Mermaid diagrams, D3.js publication-quality tables/charts, a Ctrl+K search, a glossary, light/dark themes, or keyboard chapter navigation. Always consult this skill instead of freehanding a generic HTML report when these signals appear, even if the user just says "make me a study doc about X."
+description: Generate a single self-contained HTML study document for a technical topic (protocols, standards, algorithms, architectures) that a junior researcher (학사) can study from and then present to senior researchers (석·박사). Use whenever the user asks to build study material, a study guide, technical reference doc, or "스터디 자료" as an HTML deliverable — especially when they want RFC/standard/paper-grounded quantitative content, Mermaid diagrams, D3.js publication-quality tables/charts, a Docusaurus-style multi-project folder accordion hub (with '[' sidebar toggle), light/dark themes ('t' shortcut), a Ctrl+K search, a glossary, or keyboard chapter navigation. Always consult this skill instead of freehanding a generic HTML report when these signals appear, even if the user just says "make me a study doc about X."
 ---
 
 # Study Material Generator
@@ -69,6 +69,12 @@ This skill's description of the intended reader/listener (a less experienced per
   - 다이어그램은 컨테이너 내에서 오버플로우 없이 최적 크기로 자동 핏팅(`getBBox()` viewBox 보정)되어야 하며, 확대 버튼 클릭 시 다크 모드 상태여도 가독성을 극대화하기 위해 **순백색(#ffffff)의 깨끗한 고대비 라이트 캔버스 모달**로 렌더링되어야 합니다.
 
 
+
+- **Docusaurus 스타일 멀티 프로젝트 아코디언 허브 및 사이드바 원칙 (Multi-Project Accordion Hub & Collapsible Sidebar Principle)**:
+  - 단일 문서는 물론, 여러 개의 독립 프로젝트/가이드를 단일 `study.html`에서 통합 관리할 수 있는 **Docusaurus 포털 스타일의 멀티 프로젝트 아코디언 허브 구조**를 지원합니다.
+  - `DATA.projects` 스키마를 통해 프로젝트별 폴더 아코디언(`📁 [아이콘] 프로젝트명`)으로 챕터들을 그룹화하여 접고 펼칠 수 있으며, 단일 프로젝트인 경우 기존의 플랫한 챕터 목록으로 깔끔하게 렌더링됩니다.
+  - 챕터 내부의 소제목/섹션 탐색은 사이드바를 난잡하게 중첩시키는 대신, 우측 인페이지 목차(TOC) 스크롤스파이로 명확히 분리하여 본문 내 탐색성을 극대화합니다.
+  - 본문 집중 열람을 위해 사이드바 접기/펼치기(`[` 키 및 헤더 버튼)와 라이트/다크 테마 전환(`t`/`T` 키) 단축키를 기본 제공합니다.
 
 - If the user names a very broad subject ("스터디 자료 만들어줘: 네트워킹") without a chapter scope, ask for the intended chapter breakdown or a target audience level before generating — a directionless generation wastes their review time.
 - If a claim can't be sourced after a reasonable search, say so in the content rather than guessing a number ("정확한 수치는 공개 자료에서 확인되지 않음 — 정성적 설명으로 대체").

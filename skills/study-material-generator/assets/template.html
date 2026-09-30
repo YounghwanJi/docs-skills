@@ -64,26 +64,30 @@ html.theme-transitioning *::after{
 /* progress bar */
 #progress-bar{position:fixed;top:0;left:0;height:3px;background:var(--accent);z-index:1000;width:0%;transition:width .1s;}
 
-/* header */
 header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
   padding:12px 24px;background:var(--canvas-soft);border-bottom:1px solid var(--hairline);gap:12px;}
+header .header-left{display:flex;align-items:center;gap:10px;min-width:0;}
 header .current-title{font-weight:650;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);}
 header .controls{display:flex;gap:8px;align-items:center;}
 .btn{border:none;border-radius:9999px;padding:8px 16px;font-family:var(--font-sans);font-weight:600;font-size:14px;cursor:pointer;}
 .btn-primary{background:var(--primary);color:var(--on-primary);}
 .btn-outline{background:transparent;color:var(--ink);border:1px solid var(--hairline);}
-.btn-soft{background:var(--canvas-soft);color:var(--ink);}
+.btn-text-short{display:none;}
+.btn-text-full{display:inline;}
 .chapter-pos{font-size:12px;color:var(--muted);white-space:nowrap;}
-#hamburger-btn{display:none;background:transparent;border:none;font-size:20px;cursor:pointer;padding:4px 8px;color:var(--ink);}
+.header-icon-btn{background:transparent;border:1px solid transparent;border-radius:8px;padding:6px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);transition:all .15s ease;}
+.header-icon-btn:hover{background:var(--field);border-color:var(--hairline-soft);}
 #theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;}
 #theme-toggle svg{width:18px;height:18px;}
 :root[data-theme="dark"] #theme-toggle .icon-moon{display:none;}
 :root:not([data-theme="dark"]) #theme-toggle .icon-sun{display:none;}
 
 /* layout */
-#layout{display:grid;grid-template-columns:280px minmax(0,1fr) 220px;gap:0;min-height:calc(100vh - 53px);}
+#layout{display:grid;grid-template-columns:280px minmax(0,1fr) 220px;gap:0;min-height:calc(100vh - 53px);transition:grid-template-columns .25s ease;}
+#layout.sidebar-collapsed{grid-template-columns:0px minmax(0,1fr) 220px;}
 #sidebar-scrim{display:none;}
-#sidebar{border-right:1px solid var(--hairline-soft);padding:16px 0;position:sticky;top:53px;align-self:start;height:calc(100vh - 53px);overflow-y:auto;}
+#sidebar{border-right:1px solid var(--hairline-soft);padding:16px 0;position:sticky;top:53px;align-self:start;height:calc(100vh - 53px);overflow-y:auto;transition:padding .25s ease, opacity .2s ease;}
+#layout.sidebar-collapsed #sidebar{width:0;min-width:0;padding:0;overflow:hidden;border-right-color:transparent;visibility:hidden;pointer-events:none;opacity:0;}
 .sidebar-overview-wrap{padding:0 14px 8px;}
 .sidebar-home-card{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:var(--canvas-soft);color:var(--ink);cursor:pointer;border:1px solid var(--hairline-soft);text-decoration:none;transition:all .15s ease;}
 .sidebar-home-card:hover{border-color:var(--hairline);background:var(--field);transform:translateY(-1px);}
@@ -103,11 +107,41 @@ header .controls{display:flex;gap:8px;align-items:center;}
 .sidebar-section-header .section-title{font-size:11px;font-weight:650;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
 .sidebar-section-header .chapter-count-badge{font-size:10px;font-weight:600;background:var(--field);color:var(--muted);padding:2px 8px;border-radius:9999px;}
 
-#sidebar .chapter-link{display:flex;gap:10px;align-items:baseline;padding:9px 20px;font-size:13.5px;color:var(--muted);text-decoration:none;cursor:pointer;border-left:3px solid transparent;transition:all .12s ease;}
-#sidebar .chapter-link .num{color:var(--faint);font-variant-numeric:tabular-nums;font-size:12.5px;font-weight:600;min-width:18px;}
-#sidebar .chapter-link:hover{background:var(--canvas-soft);color:var(--ink);}
-#sidebar .chapter-link.active{background:var(--canvas-soft);color:var(--ink);font-weight:650;border-left-color:var(--accent);}
-#sidebar .chapter-link.active .num{color:var(--accent);}
+/* Docusaurus-style Multi-Project & Chapter Navigation */
+#chapter-list{display:flex;flex-direction:column;gap:3px;padding:0 8px;}
+
+/* Project / Category Folder Accordion */
+.sidebar-project-group{display:flex;flex-direction:column;margin-bottom:6px;}
+.sidebar-project-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 12px;border-radius:10px;background:var(--canvas-soft);color:var(--ink);
+  cursor:pointer;border:1px solid var(--hairline-soft);transition:all .15s ease;user-select:none;
+}
+.sidebar-project-header:hover{background:var(--field);border-color:var(--hairline);}
+.sidebar-project-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:650;min-width:0;flex:1;}
+.sidebar-project-title .project-icon{font-size:13px;flex-shrink:0;}
+.sidebar-project-title .project-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sidebar-project-badge{font-size:10px;font-weight:600;background:var(--field);color:var(--muted);padding:1px 6px;border-radius:9999px;}
+.sidebar-project-chevron{display:inline-flex;align-items:center;color:var(--muted);transition:transform .2s ease;margin-left:6px;}
+.sidebar-project-group.expanded .sidebar-project-chevron{transform:rotate(90deg);}
+
+.sidebar-project-chapters{
+  display:none;list-style:none;margin:4px 0 6px 10px;padding:2px 0 2px 8px;
+  border-left:1px solid var(--hairline-soft);
+}
+.sidebar-project-group.expanded .sidebar-project-chapters{display:flex;flex-direction:column;gap:2px;}
+
+/* Chapter Link (Clean leaf item, no nested section clutter) */
+.sidebar-chapter-link{
+  display:flex;align-items:center;gap:10px;padding:8px 12px;font-size:13px;
+  color:var(--muted);text-decoration:none;border-radius:8px;cursor:pointer;
+  line-height:1.35;border-left:3px solid transparent;transition:all .12s ease;
+}
+.sidebar-chapter-link:hover{background:var(--canvas-soft);color:var(--ink);}
+.sidebar-chapter-link.active{background:var(--canvas-soft);color:var(--ink);font-weight:650;border-left-color:var(--accent);}
+.sidebar-chapter-link .ch-num{font-size:12px;font-variant-numeric:tabular-nums;color:var(--faint);font-weight:600;min-width:18px;}
+.sidebar-chapter-link.active .ch-num{color:var(--accent);}
+.sidebar-chapter-link .ch-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
 main{padding:28px 52px 56px;max-width:860px;margin:0 auto;}
 .breadcrumb{font-size:13px;color:var(--muted);margin-bottom:16px;}
 .breadcrumb .sep{margin:0 6px;color:var(--faint);}
@@ -263,17 +297,27 @@ mark{background:var(--accent);color:var(--on-primary);border-radius:3px;padding:
 .ref-row a{color:var(--ink);word-break:break-all;}
 .ref-kind{font-size:11px;color:var(--muted);}
 
-/* mobile off-canvas */
+/* mobile off-canvas & responsive header */
 @media (max-width:840px){
-  #layout{grid-template-columns:1fr;}
-  #hamburger-btn{display:inline-block;}
+  header{padding:10px 14px;gap:8px;}
+  header .controls{gap:6px;}
+  .btn{padding:6px 12px;font-size:12.5px;}
+  .btn-text-full{display:none;}
+  .btn-text-short{display:inline;}
+  .chapter-pos{display:none;}
+  #layout, #layout.sidebar-collapsed{grid-template-columns:1fr !important;}
   #toc{display:none;}
   .toc-mobile{display:block;margin-bottom:24px;}
   .toc-mobile summary{cursor:pointer;font-weight:600;font-size:14px;padding:10px 14px;background:var(--canvas-soft);border-radius:12px;}
   .toc-mobile[open] summary{border-radius:12px 12px 0 0;}
   .toc-mobile-body{border:1px solid var(--hairline-soft);border-top:none;border-radius:0 0 12px 12px;padding:8px 14px;}
-  #sidebar{position:fixed;top:0;left:-85vw;width:80vw;max-width:320px;height:100vh;background:var(--canvas);z-index:1600;transition:left .25s ease;box-shadow:0 0 0 1px var(--hairline-soft);}
-  #sidebar.open{left:0;}
+  #sidebar, #layout.sidebar-collapsed #sidebar{
+    position:fixed !important;top:0 !important;left:-85vw !important;width:80vw !important;max-width:320px !important;
+    height:100vh !important;background:var(--canvas) !important;z-index:1600 !important;transition:left .25s ease !important;
+    box-shadow:0 0 0 1px var(--hairline-soft) !important;visibility:visible !important;opacity:1 !important;
+    pointer-events:auto !important;padding:16px 0 !important;border-right:1px solid var(--hairline-soft) !important;
+  }
+  #sidebar.open, #layout.sidebar-collapsed #sidebar.open{left:0 !important;}
   #sidebar-scrim{display:none;position:fixed;inset:0;background:rgba(10,10,10,.4);z-index:1550;}
   #sidebar-scrim.open{display:block;}
   main{padding:24px 20px 32px;}
@@ -305,14 +349,27 @@ mark{background:var(--accent);color:var(--on-primary);border-radius:3px;padding:
 <div id="progress-bar"></div>
 
 <header>
-  <button id="hamburger-btn" aria-label="목차 열기">☰</button>
-  <div class="current-title" id="header-doc-title">문서 제목</div>
+  <div class="header-left">
+    <button id="sidebar-toggle-btn" class="header-icon-btn" aria-label="사이드바 접기/펼치기 ([)" title="사이드바 접기/펼치기 ([)">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="9" y1="3" x2="9" y2="21"></line>
+      </svg>
+    </button>
+    <div class="current-title" id="header-doc-title">문서 제목</div>
+  </div>
   <div class="controls">
     <span class="chapter-pos" id="chapter-pos">표지</span>
-    <button class="btn btn-soft" id="search-trigger">검색 (Ctrl+K)</button>
-    <button class="btn btn-soft" id="glossary-trigger">용어집 (Shift+/)</button>
+    <button class="btn btn-soft" id="search-trigger">
+      <span class="btn-text-full">검색 (Ctrl+K)</span>
+      <span class="btn-text-short">검색</span>
+    </button>
+    <button class="btn btn-soft" id="glossary-trigger">
+      <span class="btn-text-full">용어집 (Shift+/)</span>
+      <span class="btn-text-short">용어집</span>
+    </button>
     <button class="btn btn-soft" id="references-trigger">참고문헌</button>
-    <button class="btn btn-outline" id="theme-toggle" aria-label="테마 전환">
+    <button class="btn btn-outline" id="theme-toggle" aria-label="테마 전환 (t)" title="테마 전환 (t)">
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>
     </button>
@@ -563,9 +620,27 @@ let currentHeadIndex = [];
 let headingObserver = null;
 let diagramZoom = {scale:1, x:0, y:0};
 
+function normalizeData(){
+  if(!DATA) return;
+  if(DATA.projects && Array.isArray(DATA.projects) && DATA.projects.length > 0){
+    const flatChapters = [];
+    DATA.projects.forEach((proj, pIdx)=>{
+      (proj.chapters || []).forEach((ch, cIdx)=>{
+        ch._projectIndex = pIdx;
+        ch._chapterIndex = cIdx;
+        ch._projectTitle = proj.title;
+        ch._projectIcon = proj.icon || '📁';
+        flatChapters.push(ch);
+      });
+    });
+    DATA.chapters = flatChapters;
+  }
+}
+
 /* ============ INIT ============ */
 function init(){
-  if(!DATA) return; // JSON 파싱 에러 시 오버레이 유지
+  if(!DATA) return;
+  normalizeData();
   document.getElementById('footer-meta').textContent = `${DATA.title} · ${DATA.version} · 작성일 ${DATA.createdDate} · 최종 검토 ${DATA.reviewedDate}`;
   document.getElementById('header-doc-title').textContent = DATA.title;
   document.title = DATA.title;
@@ -579,6 +654,9 @@ function init(){
     document.documentElement.setAttribute('data-theme','dark');
   }
   if(localStorage.getItem('theme')) document.documentElement.setAttribute('data-theme', localStorage.getItem('theme'));
+  if(localStorage.getItem('sidebar-collapsed') === '1' && window.innerWidth > 840){
+    document.getElementById('layout').classList.add('sidebar-collapsed');
+  }
   mermaid.initialize({
     startOnLoad: false,
     theme: document.documentElement.getAttribute('data-theme')==='dark' ? 'dark':'default',
@@ -599,21 +677,112 @@ function init(){
 
 
 /* ============ SIDEBAR ============ */
-/* Sidebar = book-level chapter navigation only. In-page section navigation
-   (with h3 nesting and scroll-position tracking) lives solely in the right
-   TOC (#toc-box) to avoid showing the same list in two places. */
+let openProjects = new Set();
+
+function toggleSidebar(){
+  if(window.innerWidth <= 840){
+    const sb = document.getElementById('sidebar');
+    if(sb.classList.contains('open')) closeSidebarDrawer();
+    else openSidebarDrawer();
+  } else {
+    const layout = document.getElementById('layout');
+    const isCollapsed = layout.classList.toggle('sidebar-collapsed');
+    localStorage.setItem('sidebar-collapsed', isCollapsed ? '1' : '0');
+  }
+}
+
+function openSidebarDrawer(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-scrim').classList.add('open'); }
+function closeSidebarDrawer(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-scrim').classList.remove('open'); }
+
 function renderSidebar(){
   document.getElementById('overview-link').classList.toggle('active', currentChapter===-1);
   const countBadge = document.getElementById('sidebar-chapter-count');
-  if(countBadge && DATA.chapters) countBadge.textContent = `${DATA.chapters.length} Chapters`;
   const list = document.getElementById('chapter-list');
-  list.innerHTML = DATA.chapters.map((c,i)=>
-    `<a class="chapter-link${i===currentChapter?' active':''}" data-idx="${i}"><span class="num">${i+1}</span><span>${c.title}</span></a>`
-  ).join('');
-  list.querySelectorAll('.chapter-link').forEach(el=>el.addEventListener('click', ()=>{ renderChapter(parseInt(el.dataset.idx)); closeSidebarDrawer(); }));
+  if(!list || !DATA.chapters) return;
+
+  if(DATA.projects && Array.isArray(DATA.projects) && DATA.projects.length > 0){
+    // Multi-project mode: Docusaurus-style project accordions
+    if(countBadge) countBadge.textContent = `${DATA.projects.length} Projects`;
+
+    // 현재 챕터가 속한 프로젝트는 자동으로 열림
+    if(currentChapter >= 0 && DATA.chapters[currentChapter] && DATA.chapters[currentChapter]._projectIndex !== undefined){
+      openProjects.add(DATA.chapters[currentChapter]._projectIndex);
+    } else if(openProjects.size === 0){
+      openProjects.add(0);
+    }
+
+    let globalCounter = 0;
+    list.innerHTML = DATA.projects.map((proj, pIdx)=>{
+      const isExpanded = openProjects.has(pIdx);
+      const projChapters = proj.chapters || [];
+      const icon = proj.icon || '📁';
+
+      const chaptersHtml = projChapters.map((ch, cIdx)=>{
+        const globalIdx = globalCounter++;
+        const isActive = globalIdx === currentChapter;
+        return `
+          <li>
+            <a class="sidebar-chapter-link${isActive ? ' active' : ''}" data-idx="${globalIdx}">
+              <span class="ch-num">${cIdx+1}</span>
+              <span class="ch-title">${ch.title}</span>
+            </a>
+          </li>
+        `;
+      }).join('');
+
+      return `
+        <div class="sidebar-project-group${isExpanded ? ' expanded' : ''}" data-pidx="${pIdx}">
+          <div class="sidebar-project-header" data-pidx="${pIdx}">
+            <div class="sidebar-project-title">
+              <span class="project-icon">${icon}</span>
+              <span class="project-text">${proj.title}</span>
+            </div>
+            <span class="sidebar-project-badge">${projChapters.length}</span>
+            <span class="sidebar-project-chevron">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </span>
+          </div>
+          <ul class="sidebar-project-chapters">
+            ${chaptersHtml}
+          </ul>
+        </div>
+      `;
+    }).join('');
+
+    // 프로젝트 아코디언 헤더 클릭 이벤트
+    list.querySelectorAll('.sidebar-project-header').forEach(hdr=>{
+      hdr.addEventListener('click', ()=>{
+        const pIdx = parseInt(hdr.dataset.pidx);
+        const group = hdr.closest('.sidebar-project-group');
+        if(openProjects.has(pIdx)){
+          openProjects.delete(pIdx);
+          group.classList.remove('expanded');
+        } else {
+          openProjects.add(pIdx);
+          group.classList.add('expanded');
+        }
+      });
+    });
+
+  } else {
+    // Single project mode (하위 호환)
+    if(countBadge) countBadge.textContent = `${DATA.chapters.length} Chapters`;
+    list.innerHTML = DATA.chapters.map((c, i)=>
+      `<a class="sidebar-chapter-link${i===currentChapter?' active':''}" data-idx="${i}"><span class="ch-num">${i+1}</span><span class="ch-title">${c.title}</span></a>`
+    ).join('');
+  }
+
+  // 챕터 링크 클릭 -> 챕터 렌더링 & 모바일 드로어 닫기
+  list.querySelectorAll('.sidebar-chapter-link').forEach(link=>{
+    link.addEventListener('click', ()=>{
+      const idx = parseInt(link.dataset.idx);
+      renderChapter(idx);
+      closeSidebarDrawer();
+    });
+  });
 }
-function openSidebarDrawer(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-scrim').classList.add('open'); }
-function closeSidebarDrawer(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-scrim').classList.remove('open'); }
 
 /* ============ COVER PAGE ============ */
 function renderCover(){
@@ -634,22 +803,51 @@ function renderCover(){
     </div>
     <h2 style="margin-top:32px;">이 문서 보는 법</h2>
     <div class="cover-howto">
+      <div class="cover-howto-card"><kbd>[</kbd><br>사이드바 접기 / 펼치기</div>
+      <div class="cover-howto-card"><kbd>t</kbd><br>라이트 / 다크 테마 전환</div>
       <div class="cover-howto-card"><kbd>Ctrl</kbd>+<kbd>K</kbd><br>전체 문서에서 키워드 검색</div>
       <div class="cover-howto-card"><kbd>Shift</kbd>+<kbd>/</kbd><br>약어·용어 사전 열기</div>
       <div class="cover-howto-card"><kbd>←</kbd> / <kbd>→</kbd><br>이전/다음 챕터로 이동</div>
       <div class="cover-howto-card">번호가 매겨진 각주<br>클릭 시 근거 문서 팝업</div>
     </div>
-    <h2>챕터 구성</h2>
+    <h2>${(DATA.projects && DATA.projects.length > 0) ? '프로젝트 및 챕터 구성' : '챕터 구성'}</h2>
     <div id="cover-chapter-list"></div>
   `;
   const listEl = document.getElementById('cover-chapter-list');
-  DATA.chapters.forEach((c,i)=>{
-    const row = document.createElement('div');
-    row.className='cover-chapter-row';
-    row.innerHTML = `<span class="n">${i+1}</span><span class="t">${parseInlineMarkdown(c.title)}</span><span class="m">${parseInlineMarkdown(c.motivation)}</span>`;
-    row.addEventListener('click', ()=>renderChapter(i));
-    listEl.appendChild(row);
-  });
+  if(DATA.projects && Array.isArray(DATA.projects) && DATA.projects.length > 0){
+    let globalCounter = 0;
+    DATA.projects.forEach((proj, pIdx)=>{
+      const groupCard = document.createElement('div');
+      groupCard.style.cssText = 'margin-top:18px;padding:16px 20px;border:1px solid var(--hairline-soft);border-radius:14px;background:var(--canvas-soft);';
+      groupCard.innerHTML = `
+        <div style="font-weight:700;font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+          <span>${proj.icon||'📁'}</span>
+          <span>${proj.title}</span>
+          <span class="chapter-count-badge" style="margin-left:auto;">${(proj.chapters||[]).length} Chapters</span>
+        </div>
+        <div class="proj-rows" style="display:flex;flex-direction:column;gap:6px;"></div>
+      `;
+      const rowsBox = groupCard.querySelector('.proj-rows');
+      (proj.chapters||[]).forEach((c, cIdx)=>{
+        const gIdx = globalCounter++;
+        const row = document.createElement('div');
+        row.className = 'cover-chapter-row';
+        row.innerHTML = `<span class="n">${cIdx+1}</span><span class="t">${parseInlineMarkdown(c.title)}</span><span class="m">${parseInlineMarkdown(c.motivation||'')}</span>`;
+        row.addEventListener('click', ()=>renderChapter(gIdx));
+        rowsBox.appendChild(row);
+      });
+      listEl.appendChild(groupCard);
+    });
+  } else {
+    DATA.chapters.forEach((c,i)=>{
+      const row = document.createElement('div');
+      row.className='cover-chapter-row';
+      row.innerHTML = `<span class="n">${i+1}</span><span class="t">${parseInlineMarkdown(c.title)}</span><span class="m">${parseInlineMarkdown(c.motivation||'')}</span>`;
+      row.addEventListener('click', ()=>renderChapter(i));
+      listEl.appendChild(row);
+    });
+  }
+
   if(resumeIdx!==null && DATA.chapters[resumeIdx]){
     const banner = document.createElement('div');
     banner.className='resume-banner';
@@ -1116,9 +1314,11 @@ function renderChapter(idx){
   const main = document.getElementById('main-content');
   const prev = DATA.chapters[idx-1];
   const next = DATA.chapters[idx+1];
+  const projBreadcrumb = ch._projectTitle ? `<span class="sep">›</span><span style="color:var(--muted);">${ch._projectTitle}</span>` : '';
+  const eyebrowText = ch._projectTitle ? `${ch._projectIcon || '📁'} ${ch._projectTitle} · CHAPTER ${(ch._chapterIndex !== undefined ? ch._chapterIndex + 1 : idx + 1)}` : `CHAPTER ${idx+1}`;
   main.innerHTML = `
-    <div class="breadcrumb"><a data-cover="1" style="cursor:pointer;color:var(--muted);">${DATA.title}</a><span class="sep">›</span>${ch.title}</div>
-    <div class="chapter-eyebrow">CHAPTER ${idx+1}</div>
+    <div class="breadcrumb"><a data-cover="1" style="cursor:pointer;color:var(--muted);">${DATA.title}</a>${projBreadcrumb}<span class="sep">›</span>${ch.title}</div>
+    <div class="chapter-eyebrow">${eyebrowText}</div>
     <h1>${parseInlineMarkdown(ch.title)}</h1>
     <details class="toc-mobile"><summary>이 페이지의 내용</summary><div class="toc-mobile-body" id="toc-list-mobile"></div></details>
     <div class="motivation"><span class="label">왜 중요한가</span>${parseInlineMarkdown(ch.motivation)}</div>
@@ -1290,9 +1490,29 @@ function renderReferences(){
 function openModal(id){ document.getElementById(id).classList.add('open'); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme')==='dark' ? 'light':'dark';
+  document.documentElement.classList.add('theme-transitioning');
+  document.documentElement.setAttribute('data-theme', cur);
+  localStorage.setItem('theme', cur);
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: cur==='dark'?'dark':'default',
+    securityLevel: 'loose',
+    fontFamily: 'var(--font-sans)',
+    flowchart: { useMaxWidth: true, htmlLabels: true },
+    sequence: { useMaxWidth: true, showSequenceNumbers: true }
+  });
+  if(currentChapter===-1) renderCover(); else renderChapter(currentChapter);
+  setTimeout(()=>document.documentElement.classList.remove('theme-transitioning'), 350);
+}
+
 function wireGlobalEvents(){
   document.getElementById('overview-link').addEventListener('click', ()=>{ renderCover(); closeSidebarDrawer(); });
-  document.getElementById('hamburger-btn').addEventListener('click', openSidebarDrawer);
+  const sbToggle = document.getElementById('sidebar-toggle-btn');
+  if(sbToggle) sbToggle.addEventListener('click', toggleSidebar);
+  const hb = document.getElementById('hamburger-btn');
+  if(hb) hb.addEventListener('click', toggleSidebar);
   document.getElementById('sidebar-scrim').addEventListener('click', closeSidebarDrawer);
   wireDiagramZoomControls();
   document.getElementById('search-trigger').addEventListener('click', ()=>{openModal('search-modal'); document.getElementById('search-input').focus();});
@@ -1306,21 +1526,7 @@ function wireGlobalEvents(){
   document.querySelectorAll('.modal-close').forEach(btn=>btn.addEventListener('click', ()=>closeModal(btn.dataset.close)));
   document.getElementById('search-input').addEventListener('input', e=>runSearch(e.target.value));
   document.getElementById('glossary-filter').addEventListener('input', e=>filterGlossary(e.target.value));
-  document.getElementById('theme-toggle').addEventListener('click', ()=>{
-    const cur = document.documentElement.getAttribute('data-theme')==='dark' ? 'light':'dark';
-    document.documentElement.classList.add('theme-transitioning');
-    document.documentElement.setAttribute('data-theme', cur);
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: cur==='dark'?'dark':'default',
-      securityLevel: 'loose',
-      fontFamily: 'var(--font-sans)',
-      flowchart: { useMaxWidth: true, htmlLabels: true },
-      sequence: { useMaxWidth: true, showSequenceNumbers: true }
-    });
-    if(currentChapter===-1) renderCover(); else renderChapter(currentChapter);
-    setTimeout(()=>document.documentElement.classList.remove('theme-transitioning'), 350);
-  });
+  document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
 
   document.querySelectorAll('[id$="-modal"]').forEach(modal=>{
     modal.addEventListener('click', e=>{ if(e.target===modal) modal.classList.remove('open'); });
@@ -1345,6 +1551,8 @@ function wireGlobalEvents(){
       return;
     }
     if(inInput) return;
+    if(e.key === '['){ e.preventDefault(); toggleSidebar(); return; }
+    if(e.key === 't' || e.key === 'T'){ e.preventDefault(); toggleTheme(); return; }
     if(e.shiftKey && e.key==='?'){ e.preventDefault(); openGlossary(); return; }
     if(e.key==='ArrowRight'){ if(currentChapter < DATA.chapters.length-1) renderChapter(currentChapter+1); }
     if(e.key==='ArrowLeft'){ if(currentChapter > 0) renderChapter(currentChapter-1); else if(currentChapter===0) renderCover(); }

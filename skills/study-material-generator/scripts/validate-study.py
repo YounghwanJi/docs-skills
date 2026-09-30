@@ -70,14 +70,29 @@ def validate_study_file(file_path):
     errors = []
     warnings = []
 
-    required_top = ["title", "version", "learningGoals", "chapters", "glossary", "references"]
+    required_top = ["title", "version", "learningGoals", "glossary", "references"]
     for key in required_top:
         if key not in data:
             errors.append(f"최상위 필수 필드 누락: '{key}'")
 
-    chapters = data.get("chapters", [])
+    if "projects" in data and isinstance(data["projects"], list) and len(data["projects"]) > 0:
+        chapters = []
+        for p_idx, proj in enumerate(data["projects"]):
+            if not isinstance(proj, dict) or not proj.get("title"):
+                errors.append(f"프로젝트 {p_idx+1}: 유효한 객체가 아니거나 'title' 누락")
+            for ch in proj.get("chapters", []):
+                chapters.append(ch)
+        data["chapters"] = chapters
+        if len(chapters) == 0:
+            errors.append("'projects' 내에 유효한 챕터가 하나도 없습니다.")
+    elif "chapters" in data:
+        chapters = data.get("chapters", [])
+    else:
+        errors.append("최상위에 'chapters' 또는 'projects' 배열이 존재해야 합니다.")
+        chapters = []
+
     if not isinstance(chapters, list) or len(chapters) == 0:
-        errors.append("'chapters' 배열이 비어있거나 올바른 형식이 아닙니다.")
+        errors.append("'chapters' 또는 'projects' 배열이 비어있거나 올바른 형식이 아닙니다.")
     else:
         chapter_ids = set()
         for idx, ch in enumerate(chapters):

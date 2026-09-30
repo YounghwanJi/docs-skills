@@ -3,8 +3,16 @@
 ## 1. Document metadata (header/footer)
 - Title, version, 작성일, 최종 검토일, 참고 표준 버전 목록 — shown in header/footer per `assets/template.html`.
 
-## 1.5 Chapter numbering (Wikidocs-style)
-Do NOT prefix `chapter.title` with a manual number ("1. ...", "2장 ..."). The template auto-numbers chapters from their array position in the sidebar, breadcrumb, and `CHAPTER n` eyebrow. Section `heading` fields may keep a decimal sub-number (e.g. "1.1 배경") if that helps readers cross-reference, but it's optional since the right-side TOC already lists them in order.
+## 1.5 Multi-Project & Chapter Structure (Docusaurus-style Accordion Hub)
+- Do NOT prefix `chapter.title` with a manual number ("1. ...", "2장 ..."). The template auto-numbers chapters from their array position in the sidebar, breadcrumb, and `CHAPTER n` eyebrow.
+- **Multi-Project Hub Mode (`projects: [...]`)**:
+  - 추후 여러 개의 프로젝트/기술 스터디 문서를 하나의 `study.html` 인덱스에서 통합 관리하고자 할 때 사용합니다.
+  - 최상위에 `projects` 배열을 두고 각 프로젝트 객체(`id`, `title`, `icon`, `chapters: [...]`)로 구성합니다.
+  - 사이드바에서는 **Docusaurus 스타일의 폴더형 아코디언 (`📁 [아이콘] 프로젝트명`)**으로 렌더링되어, 클릭 시 해당 프로젝트의 챕터 목록이 펼쳐집니다.
+- **Single-Project Mode (`chapters: [...]`)**:
+  - 단일 기술 주제나 표준을 다루는 기본 모드로, 최상위에 `chapters` 배열을 직접 정의합니다. 사이드바에 번호가 매겨진 챕터 목록이 깔끔하게 렌더링됩니다.
+- **Strict In-Page TOC Separation Principle**:
+  - 챕터 내부의 소제목(`sections`)은 사이드바에 중첩시키지 않고, **우측 TOC(`#toc-box`)**에서만 전담하여 인페이지 스크롤 앵커로 처리합니다. 이를 통해 사이드바는 프로젝트-챕터 단위의 정갈한 디렉터리 트리 형태를 유지합니다.
 
 ## 2. Chapter shape (mandatory, in order)
 1. **Motivation box** — "왜 중요한가": 2–4 sentences, why a researcher should care, before any technical detail.

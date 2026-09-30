@@ -62,10 +62,14 @@ When answering directly in chat:
 
 When the user asks for a document, HTML file, or visual guide:
 
-1. **Design System & Template**:
+1. **UI Layout & Design System Inheritance (study-material-generator 표준 계승)**:
    - Use `assets/template.html` as the base scaffold.
-   - It incorporates the unified design system from `references/design-tokens.md` (Pretendard Variable font, JetBrains Mono, Okabe-Ito semantic palette, and dark/light mode toggle).
-   - Inherits the core readability principles from `study-material-generator`: optimal Korean typography ($18\sim 19\text{px}$, line-height $1.75\sim 1.85$, `word-break: keep-all`), responsive code blocks (`white-space: pre-wrap; word-break: break-all;`), high-contrast table borders, and pure white (#ffffff) canvas modals for enlarged diagram inspection.
+   - **UI는 `study-material-generator`를 엄격히 따릅니다**: 헤더 네비게이션 구조, 다크/라이트 테마 전환(단축키 `t`), Pretendard Variable 및 JetBrains Mono 폰트 체계, Okabe-Ito 색상 토큰을 100% 동일하게 유지합니다.
+   - Inherits all core readability and interaction principles from `study-material-generator`:
+     - 가독성 타이포그래피 ($18\sim 19\text{px}$, 줄간격 $1.75\sim 1.85$, `word-break: keep-all`).
+     - 소스 코드 및 터미널 블록 줄바꿈 (`white-space: pre-wrap; word-break: break-all;`) 및 1-클릭 복사 버튼.
+     - 고대비 테이블 테두리 및 Mermaid 다이어그램 줌/팬 순백색(#ffffff) 캔버스 모달.
+     - 테마 전환 단축키(`t`), 부드러운 트랜지션 애니메이션.
 2. **Populate Embedded `#content-data` JSON**:
    - Inject the JSON structure into `<script type="application/json" id="content-data">`:
      ```json
@@ -118,7 +122,7 @@ When the user asks for a document, HTML file, or visual guide:
 - **Never talk down or patronize**: A 5-year-old explanation should feel delightful and wonder-filled, not dumbed down. A manager explanation should feel strategic and empowering, not dismissive.
 - **Concrete over abstract**: "A server is like a waiter in a restaurant" always beats "A server handles client-server HTTP requests."
 - **Self-contained visual diagrams**: When Mermaid diagrams are included, ensure they use plain words matching the audience level, and provide an alt-text summary.
-- **Maintain design system integrity**: Never alter the core CSS tokens or font families. All deliverables must feel like natural siblings to `study-material-generator` and `seminar-material-generator`.
+- **Maintain design system integrity (UI 표준 상속 원칙)**: Never alter the core CSS tokens or font families. All deliverables must strictly adhere to the UI/UX presentation standards established in `study-material-generator` (typography, dark/light theme switching with `t` shortcut, high-contrast borders, canvas modals, responsive code formatting).
 
 ---
 

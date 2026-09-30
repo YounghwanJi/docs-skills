@@ -13,6 +13,19 @@ Implemented already in `assets/template.html`. Documented here so edits preserve
 - Opens the glossary page/modal: alphabetically sorted abbreviation list, each with full term, one-line definition, and links back to every chapter section where it's used.
 - Has its own lightweight filter input (not the same index as Ctrl+K, but same data source).
 
+## [ — Sidebar collapse / expand (Toggle)
+- Toggles the left sidebar open/closed.
+- On desktop (>840px): collapses `#layout` from 3 columns to 2 columns (sidebar width becomes 0), expanding the main reading area for distraction-free reading. Persists state in `localStorage` (`sidebar-collapsed`).
+- On mobile/tablet (≤840px): toggles the off-canvas drawer.
+- Also accessible via the header's sidebar toggle button (`#sidebar-toggle-btn`).
+- Suppressed when focus is inside any text input, search modal, or glossary filter.
+
+## t / T — Theme toggle
+- Switches between light and dark themes instantly.
+- Triggers smooth CSS transition, switches theme attribute, updates Mermaid diagrams, and persists choice in `localStorage` (`theme`).
+- Also accessible via the header theme toggle button (`#theme-toggle`).
+- Suppressed when focus is inside text inputs.
+
 ## ← / → — Chapter navigation
 - Left = previous chapter, Right = next chapter, wraps are disabled (no-op at first/last chapter, not a wraparound).
 - Suppressed when focus is inside any text input, the search modal, or the glossary filter.
@@ -22,11 +35,13 @@ Implemented already in `assets/template.html`. Documented here so edits preserve
 - Light is default. Toggle button in header sets `data-theme="dark"` on `<html>` and persists the choice in `localStorage` (per-browser only — this is a downloaded file, not a shared hosted page, so this is fine and expected).
 - Respects `prefers-color-scheme` only as the *initial* default if the user has never toggled manually in that browser.
 
-## Sidebar / TOC (Wikidocs-style)
-- Left sidebar: numbered chapter list (`1`, `2`, `3`...) with a left accent border on the active chapter, closer to a book's table of contents than a pill-nav. Auto-numbering comes from array position — chapter `title` fields should NOT include a manual leading number.
-- When a chapter is active, its section headings expand as an indented sub-list directly beneath it in the sidebar (connected by a thin vertical guide line), and collapse again when another chapter is selected. Clicking a sub-item scrolls to that section's anchor (`#section-{chapterIdx}-{sectionIdx}`) rather than navigating away.
-- Breadcrumb (`문서 제목 › 챕터 제목`) and a `CHAPTER n` eyebrow sit above the chapter `<h1>`, reinforcing position in the book.
-- Right TOC is a boxed "이 페이지의 내용" card (not a bare list) listing the current chapter's section headings; clicking scrolls to the anchor.
+## Sidebar / TOC (Docusaurus-style Multi-Project Accordion Hub)
+- **Left sidebar**: Project & Chapter directory navigation:
+  - **Multi-project Hub Mode (`DATA.projects`)**: When managing multiple projects/guides in a single index document, each project is rendered as a collapsible accordion folder (`📁 [아이콘] 프로젝트명`). Clicking a project header expands/collapses its chapter list. The project containing the active chapter is **auto-expanded** on load and chapter switch.
+  - **Single-project Mode (`DATA.chapters`)**: Renders a clean numbered chapter list (`1`, `2`, `3`...).
+  - **Strict Separation Principle**: Sidebar displays chapters only — it does NOT clutter the sidebar with child section headings. In-page section navigation lives exclusively in the right TOC (`#toc-box`).
+- Breadcrumb (`문서 제목 › 프로젝트명 › 챕터 제목`) and a `CHAPTER n` eyebrow sit above the chapter `<h1>`, reinforcing position in the book.
+- Right TOC is a boxed "이 페이지의 내용" card listing the current chapter's section headings; clicking smoothly scrolls to that anchor.
 - **Bottom-of-chapter page-turner**: a two-card row (◀ 이전 / 다음 ▶) showing the previous/next chapter's title, clickable — the primary way readers move linearly through the book, with ←/→ keys as the power-user shortcut for the same action.
 - Sidebar and TOC both collapse to off-canvas drawers below the `md` breakpoint (840px), matching the Mobbin responsive collapsing strategy (column-by-column, not reflow).
 - Main reading column is narrowed to ~760px (book-page width) rather than a wide dashboard layout.
@@ -35,10 +50,10 @@ Implemented already in `assets/template.html`. Documented here so edits preserve
 Thin fixed bar at the very top of the viewport, width = scroll progress through the current chapter (resets per chapter, not per document).
 
 ## Cover page
-The document opens on a cover page (title, learning goals, "이 문서 보는 법", chapter overview, a "시작하기" button) rather than dropping straight into Chapter 1. A left-sidebar "개요 / 표지" item always returns here. If the reader has a previously-read chapter saved (`localStorage`), the cover shows a "이어보기" resume banner rather than auto-redirecting — the cover is always shown first so returning readers aren't skipped past it.
+The document opens on a cover page (title, learning goals, "이 문서 보는 법", chapter overview, a "시작하기" button) rather than dropping straight into Chapter 1. A left-sidebar "개요 / 표지" item always returns here. If the reader has a previously-read chapter saved (`localStorage`), the cover shows a "이어보기" resume banner rather than auto-redirecting — the cover is always shown first so returning readers aren't skipped past it. Includes shortcut cheat sheet cards for `[`, `t`, `Ctrl+K`, `Shift+/`, and arrow keys.
 
 ## Mobile navigation (≤840px)
-- The left sidebar becomes an off-canvas drawer, opened by a hamburger button in the header and closed by tapping the scrim, a nav item, Escape, or the browser back gesture.
+- The left sidebar becomes an off-canvas drawer, opened by the sidebar toggle button in the header and closed by tapping the scrim, a nav item, Escape, or the browser back gesture.
 - The right "이 페이지의 내용" TOC is hidden at this width; its content is duplicated into a `<details>` accordion inserted at the top of the chapter body instead, so in-page navigation is never lost on mobile — only relocated.
 
 ## Footnotes as popovers
@@ -53,8 +68,9 @@ Navigating to a chapter updates the URL to `#ch-{idx}` via `history.replaceState
 ## Print
 A `@media print` stylesheet hides the header, sidebar, TOC, footer, progress bar, chapter-nav cards, modals, and hamburger button, leaving only the current chapter's body content in normal print flow. Note the practical limit: since chapters are rendered one at a time into the DOM (not all at once), printing only captures whichever chapter is currently open — mention this to the reader if they ask for a full-document PDF (they should print each chapter, or you should offer a separate "print all" build if that's explicitly requested).
 
-## Sidebar vs. TOC — single source of truth
-The left sidebar is book-level navigation only (chapter list). It does **not** repeat section headings — that would duplicate the right-side TOC. In-page section/sub-section navigation (including h3 nesting and current-position highlighting) lives exclusively in the right `#toc-box` (and its mobile accordion twin). Don't reintroduce a sidebar sub-list when editing.
+## Sidebar and TOC Coordination
+- **Left sidebar**: Book/Project-level directory navigation (Project folder accordions in multi-project mode, and chapter items). It never duplicates section headings.
+- **Right TOC (`#toc-box`)**: Exclusively handles the active chapter's detailed in-page headings (including h3 nesting) with real-time `IntersectionObserver` Scrollspy position tracking.
 
 ## TOC scroll-position tracking (scrollspy)
 An `IntersectionObserver` watches every heading in the current chapter and marks the matching TOC link `.active` as it enters the reading viewport (trigger band: roughly top-90px to 70%-of-viewport). This means the TOC always shows where the reader currently is, not just a static list.
