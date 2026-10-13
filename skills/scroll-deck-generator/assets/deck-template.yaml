@@ -1,0 +1,67 @@
+# ==============================================================================
+# Scrolline v2 Deck Template
+# 부모 스킬(seminar-material-generator)의 기획 인터뷰 메타데이터 및 작성 규범 적용
+# ==============================================================================
+
+id: my-scroll-deck
+title: "발표 덱 제목 (간결하고 명확한 헤드라인)"
+concept: data             # rail | data | launch | zoom | canvas | kinetic
+sample: false             # 가상 시나리오면 true (화면에 「표본」 표기), 실데이터면 false
+classification: "INTERNAL USE ONLY"  # CONFIDENTIAL | INTERNAL USE ONLY | PUBLIC | null
+event: "2026 테크 컨퍼런스 세미나"
+
+presenter:
+  name: "발표자 성명"
+  role: "수석 소프트웨어 엔지니어"
+  org: "코어 아키텍처 연구소"
+  date: "2026-10-13"
+
+# 실데이터 덱인 경우 필수 기재 (수치 날조 방지)
+sources:
+  - id: s-main
+    title: "공식 벤치마크 및 통계 보고서"
+    url: "https://example.com/reports/2026"
+    accessed: "2026-10-13"
+
+# ==============================================================================
+# Beats: 발표의 기본 단위 (화면 컷 없이 연속 타임라인에 배치)
+# 1정지점 = 1주장 원칙, 이모지 배제, 구어체 스피치 스크립트 작성
+# ==============================================================================
+beats:
+  # Beat 1: 인트로 / 문제 제기
+  - id: b-intro
+    type: statement
+    title: "단일 장애점(SPOF) 극복을 위한 분산 합의 구조"
+    subtitle: "고가용성 분산 시스템에서의 P99 레이턴시 안정화 방안"
+    place: { slot: full }
+    notes:
+      script: "오늘 세미나에서는 분산 환경에서 P99 지연 시간을 획기적으로 낮추기 위해 검증한 아키텍처 결과를 공유해 드리고자 합니다."
+      duration_sec: 45
+
+  # Beat 2: 핵심 지표 비교 (차트)
+  - id: b-latency-chart
+    type: chart
+    kind: bar
+    categories: ["기존 솔루션", "경쟁 프로토콜", "제안 아키텍처"]
+    series:
+      - name: "P99 레이턴시 (ms)"
+        values: [12.8, 8.4, 2.1]
+    title: "제안 아키텍처 도입 시 지연 시간 83% 감축"
+    source: s-main
+    place: { slot: full }
+    steps:
+      - name: highlight-proposed
+        move: annotation-pin
+        notes:
+          script: "특히 세 번째 막대에서 보시듯, 제안 아키텍처는 극단적인 부하 상황에서도 2.1밀리초를 유지합니다."
+          duration_sec: 40
+
+  # Beat 3: 핵심 아키텍처 결론 (Handoff 연결)
+  - id: b-takeaway
+    type: statement
+    title: "단순한 캐시 추가가 아닌 계층 구조의 근본적 혁신"
+    subtitle: "L4 바이패스 및 Zero-Copy 직렬화를 통한 처리량 4배 향상"
+    place: { slot: full }
+    notes:
+      script: "핵심 결론은 단순한 리소스 증설이 아닌, Zero-Copy 직렬화와 바이패스 계층 설계를 통한 구조적 혁신에 있습니다."
+      duration_sec: 35

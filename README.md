@@ -18,6 +18,7 @@
 | :--- | :--- | :--- | :--- |
 | **study-material-generator** | [`skills/study-material-generator/`](./skills/study-material-generator/SKILL.md) | 표준/논문 기반의 기술 주제를 깊이 있게 학습·발표할 수 있는 자급자족형(Single-file) HTML 스터디 문서 생성기 | Claude, Codex, Antigravity |
 | **seminar-material-generator** | [`skills/seminar-material-generator/`](./skills/seminar-material-generator/SKILL.md) | 학회, 기술 컨퍼런스, 사내 세미나 발표를 위한 16:9 와이드스크린 반응형 웹 슬라이드 덱(Presentation Deck) 생성기 | Claude, Codex, Antigravity |
+| **scroll-deck-generator** | [`skills/scroll-deck-generator/`](./skills/scroll-deck-generator/SKILL.md) | `seminar-material-generator`를 상속받아 6대 모션 문법과 단일 GSAP 연속 타임라인 기반의 고화질 스크롤 발표 덱(Scrolline v2 deck) 및 MP4 영상 추출을 지원하는 프레젠테이션 생성기 | Claude, Codex, Antigravity |
 | **eli5** | [`skills/eli5/`](./skills/eli5/SKILL.md) | [DreambigOu/ELI5](https://github.com/DreambigOu/ELI5)를 기반으로 수정한 스킬로, 5세 어린이부터 비기술직 경영진, 전공자까지 청중별 맞춤형 설명(대화형 답변 및 인터랙티브 웹 익스플레이너 `eli5.html`) 생성 | Claude, Codex, Antigravity |
 
 ---
@@ -100,6 +101,31 @@
   - 에이전트에게 눈높이와 함께 요청:
     > "양자 컴퓨터에 대해 5세 어린이와 경영진 눈높이로 eli5 스킬을 써서 HTML 문서로 만들어줘."
     > "쿠버네티스 원리를 비전공자인 내 팀장님한테 설명하듯 쉽게 풀어서 설명해줘."
+
+---
+
+### 📖 스킬 상세 안내: `scroll-deck-generator`
+
+- **개요**: `seminar-material-generator`의 기획 인터뷰와 디자인 시스템을 상속받아, 장면 분할 없이 하나의 연속된 무대 위에서 오브젝트가 변신하며 이어지는 **자급자족형 스크롤 프레젠테이션 웹 덱(`scroll-deck.html`)**, 선언형 소스(`deck.yaml`), 그리고 **MP4 고화질 비디오**를 생성합니다.
+- **상속 및 확장 관계**:
+  - `seminar-material-generator` 상속: 7대 기획 인터뷰 체크리스트(보안 등급, 행사명, 발표자, 시간, 청중 레벨, 결론 한 줄), 1정지점 1주장 원칙, 이모지 배제 정갈한 타이포그래피, 발표자 노트(Speaker Notes) 필수화, 다크/라이트 디자인 토큰
+  - 확장 특화: 단일 HTML 자급자족형 웹 덱(`scroll-deck.html`) 즉시 실행 지원, 단일 무대 및 연속 GSAP 마스터 타임라인(`deck.yaml`), 앞 비트 요소가 다음 비트로 이어지는 Handoff & Link 모션, 6대 모션 콘셉트 팩, 마우스 휠 스크럽 조작, HyperFrames 기반 무손실 MP4 영상 내보내기
+- **6대 모션 콘셉트 팩**:
+  - `rail` (가로 시간 레일): 회사 연혁, 로드맵, 산업 10년사
+  - `data` (데이터 저널리즘): 분기 실적, 통계/시장 분석, 인터랙티브 모핑 차트
+  - `launch` (제품 런치): 신제품 발표, 핵심 기능 쇼케이스, 다크/라이트 콘트라스트
+  - `zoom` (무한 줌 드릴다운): 장애 근본 원인(Root Cause) 진단, TAM-SAM-SOM, 트리 계층 구조
+  - `canvas` (2.5D 공간 비행): 투자 유치 피치덱, 전략 지도, 워크플로 투어
+  - `kinetic` (키네틱 타이포그래피): 컨퍼런스 키노트, 선언문, 개념 강의
+- **CLI 검증 도구 내장**:
+  - `python skills/scroll-deck-generator/scripts/validate-deck.py <deck.yaml>`로 헤더 메타데이터, 콘셉트 유효성, 실데이터 출처, 비트별 발표자 대본 작성률 및 예상 발표 시간 자동 검증
+- **의존성 및 사전 요구사항**:
+  - 검증: Python 3.7+ (내장 라이브러리 fallback 지원, 추가 설치 불필요)
+  - Scrolline 로컬 구동 및 MP4 렌더링 시: Node.js 22+, HyperFrames CLI, ffmpeg
+- **사용 방법**:
+  - 에이전트에게 주제와 콘셉트와 함께 요청:
+    > "차세대 분산 아키텍처 전환 로드맵에 대해 scroll-deck-generator 스킬을 써서 rail 콘셉트의 스크롤 발표 덱으로 만들어줘."
+    > "분기 클라우드 인프라 비용 절감 분석 리포트를 data 콘셉트의 스크롤 덱으로 만들어줘."
 
 ---
 
