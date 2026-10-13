@@ -21,7 +21,7 @@ Read `references/design-tokens.md`, `references/content-structure.md`, and `refe
      - **Phase 2 (Chapter by chapter)**: Generate and inject chapter content 1 or 2 at a time using file editing tools (`replace_file_content`).
      - **Phase 3 (Post-linking)**: Populate complete `glossary` entries and verify all `references` IDs match footnote citations.
 5. **Build content as structured JSON**, following the schema in `assets/template.html`'s embedded `#content-data` block (chapters → sections → footnotes/references/glossary/compare-tables). Do not restructure the CSS/JS scaffolding unless the user asks for a layout change.
-   - *Formatting rule*: Use standard HTML tags (`<strong>`, `<code>`) for emphasis. While the template auto-converts markdown (`**bold**` → `<strong>`, `` `code` `` → `<code>`) via `parseInlineMarkdown`, explicit HTML is preferred.
+   - *Formatting rule*: Use standard HTML tags (`<strong>`, `<code>`) or markdown shorthand (`**bold**`, `__bold__`, `` `code` ``) for emphasis. The template auto-converts inline markdown (including multiline bold and inline code token protection) and parses GFM markdown tables (`| a | b |`) into responsive high-contrast bordered tables via `parseContent`.
 6. **Verify before delivering**:
    - **Automated validation**: Run `python skills/study-material-generator/scripts/validate-study.py <output_file.html>` to verify JSON syntax, required schema, chapter structure, and footnote/reference cross-references.
    - **Checklist**: Every number has a footnote, every abbreviation has a glossary entry, every Mermaid diagram has an alt-text summary line, every compare-table has a one-line verdict, chapter count in sidebar matches JSON, search works for a sample query.
@@ -65,7 +65,7 @@ This skill's description of the intended reader/listener (a less experienced per
   - 소스 코드 및 페이로드 블록(`pre`, `code`)은 가로 스크롤로 인한 내용 잘림을 방지하기 위해 자동 줄바꿈(`white-space: pre-wrap; word-break: break-all;`)을 적용하여 좁은 화면에서도 전문을 한눈에 열람할 수 있도록 합니다.
 
 - **고대비 테이블 및 다이어그램 확대 캔버스 원칙 (High-Contrast Tables & Light Canvas Modal Principle)**:
-  - 모든 표(비트필드, 비교 매트릭스)는 다크/라이트 테마 모두에서 경계선(`border`)이 또렷하게 드러나도록 고대비 테두리 스타일을 유지합니다.
+  - 모든 표(일반 본문 HTML 테이블, 마크다운 기반 파이프 테이블, 비트필드, 비교 매트릭스)는 다크/라이트 테마 모두에서 경계선(`border: 1px solid var(--hairline)`)이 또렷하게 드러나도록 고대비 테두리 스타일을 유지합니다.
   - 다이어그램은 컨테이너 내에서 오버플로우 없이 최적 크기로 자동 핏팅(`getBBox()` viewBox 보정)되어야 하며, 확대 버튼 클릭 시 다크 모드 상태여도 가독성을 극대화하기 위해 **순백색(#ffffff)의 깨끗한 고대비 라이트 캔버스 모달**로 렌더링되어야 합니다.
 
 
@@ -74,7 +74,7 @@ This skill's description of the intended reader/listener (a less experienced per
   - 단일 문서는 물론, 여러 개의 독립 프로젝트/가이드를 단일 `study.html`에서 통합 관리할 수 있는 **Docusaurus 포털 스타일의 멀티 프로젝트 아코디언 허브 구조**를 지원합니다.
   - `DATA.projects` 스키마를 통해 프로젝트별 폴더 아코디언(`📁 [아이콘] 프로젝트명`)으로 챕터들을 그룹화하여 접고 펼칠 수 있으며, 단일 프로젝트인 경우 기존의 플랫한 챕터 목록으로 깔끔하게 렌더링됩니다.
   - 챕터 내부의 소제목/섹션 탐색은 사이드바를 난잡하게 중첩시키는 대신, 우측 인페이지 목차(TOC) 스크롤스파이로 명확히 분리하여 본문 내 탐색성을 극대화합니다.
-  - 본문 집중 열람을 위해 사이드바 접기/펼치기(`[` 키 및 헤더 버튼)와 라이트/다크 테마 전환(`t`/`T` 키) 단축키를 기본 제공합니다.
+  - 본문 집중 열람을 위해 사이드바 접기/펼치기(`[` 키 및 헤더 버튼, 모바일 닫기 버튼)와 상태 지속(`localStorage`), 라이트/다크 테마 전환(`t`/`T` 키) 단축키를 기본 제공합니다.
 
 - If the user names a very broad subject ("스터디 자료 만들어줘: 네트워킹") without a chapter scope, ask for the intended chapter breakdown or a target audience level before generating — a directionless generation wastes their review time.
 - If a claim can't be sourced after a reasonable search, say so in the content rather than guessing a number ("정확한 수치는 공개 자료에서 확인되지 않음 — 정성적 설명으로 대체").

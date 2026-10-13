@@ -85,9 +85,13 @@ header .controls{display:flex;gap:8px;align-items:center;}
 /* layout */
 #layout{display:grid;grid-template-columns:280px minmax(0,1fr) 220px;gap:0;min-height:calc(100vh - 53px);transition:grid-template-columns .25s ease;}
 #layout.sidebar-collapsed{grid-template-columns:0px minmax(0,1fr) 220px;}
+#sidebar-toggle-btn.collapsed{background:var(--field);color:var(--accent);border-color:var(--hairline-soft);}
 #sidebar-scrim{display:none;}
 #sidebar{border-right:1px solid var(--hairline-soft);padding:16px 0;position:sticky;top:53px;align-self:start;height:calc(100vh - 53px);overflow-y:auto;transition:padding .25s ease, opacity .2s ease;}
 #layout.sidebar-collapsed #sidebar{width:0;min-width:0;padding:0;overflow:hidden;border-right-color:transparent;visibility:hidden;pointer-events:none;opacity:0;}
+.sidebar-header-mobile{display:none;align-items:center;justify-content:space-between;padding:0 16px 12px;border-bottom:1px solid var(--hairline-soft);margin-bottom:12px;}
+.sidebar-mobile-title{font-size:14px;font-weight:700;color:var(--ink);}
+@media (max-width:840px){.sidebar-header-mobile{display:flex;}}
 .sidebar-overview-wrap{padding:0 14px 8px;}
 .sidebar-home-card{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:var(--canvas-soft);color:var(--ink);cursor:pointer;border:1px solid var(--hairline-soft);text-decoration:none;transition:all .15s ease;}
 .sidebar-home-card:hover{border-color:var(--hairline);background:var(--field);transform:translateY(-1px);}
@@ -215,6 +219,41 @@ footer .footer-links{display:flex;gap:20px;font-size:13px;}
 .callout.note{border-left-color:var(--ink);}
 .callout.warning{border-left-color:var(--warn);} .callout.warning::before{color:var(--warn);}
 .callout.deep{border-left-color:var(--accent);} .callout.deep::before{color:var(--accent);}
+
+/* ============ MARKDOWN & GENERAL CONTENT TABLES ============ */
+.table-responsive{width:100%;overflow-x:auto;margin:24px 0;-webkit-overflow-scrolling:touch;}
+main table, .markdown-table{
+  width:100%;border-collapse:collapse;margin:20px 0;font-size:14.5px;line-height:1.6;
+  border:1px solid var(--hairline);background:var(--canvas);border-radius:8px;
+}
+main th, .markdown-table th{
+  background:var(--canvas-soft);color:var(--ink);font-weight:650;
+  border:1px solid var(--hairline);padding:10px 14px;text-align:left;letter-spacing:-0.01em;
+}
+main td, .markdown-table td{
+  border:1px solid var(--hairline);padding:10px 14px;color:var(--ink-soft);vertical-align:top;
+}
+main tbody tr:nth-child(even) td, .markdown-table tbody tr:nth-child(even) td{
+  background:var(--field);
+}
+main tbody tr:hover td, .markdown-table tbody tr:hover td{
+  background:rgba(0,102,255,0.04);
+}
+:root[data-theme="dark"] main table, :root[data-theme="dark"] .markdown-table{
+  border-color:#383838;
+}
+:root[data-theme="dark"] main th, :root[data-theme="dark"] .markdown-table th{
+  background:#1a1a1a;border-color:#383838;color:#fff;
+}
+:root[data-theme="dark"] main td, :root[data-theme="dark"] .markdown-table td{
+  border-color:#383838;color:#e2e2e2;
+}
+:root[data-theme="dark"] main tbody tr:nth-child(even) td, :root[data-theme="dark"] .markdown-table tbody tr:nth-child(even) td{
+  background:#141414;
+}
+:root[data-theme="dark"] main tbody tr:hover td, :root[data-theme="dark"] .markdown-table tbody tr:hover td{
+  background:rgba(0,102,255,0.08);
+}
 
 /* bitfield table (protocol packet headers) */
 .bitfield-table-wrap{margin:20px 0;overflow-x:auto;}
@@ -379,6 +418,10 @@ mark{background:var(--accent);color:var(--on-primary);border-radius:3px;padding:
 <div id="sidebar-scrim"></div>
 <div id="layout">
   <nav id="sidebar" aria-label="목차">
+    <div class="sidebar-header-mobile">
+      <span class="sidebar-mobile-title">목차</span>
+      <button id="sidebar-close-btn" class="header-icon-btn" aria-label="사이드바 닫기">✕</button>
+    </div>
     <div class="sidebar-overview-wrap">
       <a class="sidebar-home-card" id="overview-link">
         <div class="home-card-icon-box">
@@ -546,17 +589,92 @@ mark{background:var(--accent);color:var(--on-primary);border-radius:3px;padding:
 </script>
 
 <script>
-/* ============ INLINE MARKDOWN & ESCAPING UTILITIES ============ */
-function parseInlineMarkdown(str){
-  if(typeof str !== 'string') return str;
-  return str
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>');
-}
-
+/* ============ MARKDOWN & ESCAPING UTILITIES ============ */
 function escapeHtml(str){
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function parseInlineMarkdown(str){
+  if(typeof str !== 'string') return str;
+  
+  // 1. 인라인 코드(`code`) 임시 보호 (코드 블록 안의 별표나 특수문자가 볼드로 변하지 않도록)
+  const codeTokens = [];
+  let res = str.replace(/`([^`]+)`/g, (_, code) => {
+    const idx = codeTokens.length;
+    codeTokens.push(`<code>${escapeHtml(code)}</code>`);
+    return `___CODE_TOKEN_${idx}___`;
+  });
+
+  // 2. Bold 처리: **bold** 또는 __bold__ (개행 문자 포함 허용)
+  res = res
+    .replace(/\*\*([\s\S]+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/(?<!\w)__([\s\S]+?)__(?!\w)/g, '<strong>$1</strong>');
+
+  // 3. Italic 처리: *italic* 또는 _italic_ (단, 태그 안이나 단독 기호 주의)
+  res = res
+    .replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '<em>$1</em>')
+    .replace(/(?<![_\w])_([^_\n]+?)_(?![_\w])/g, '<em>$1</em>');
+
+  // 4. 인라인 코드 복원
+  res = res.replace(/___CODE_TOKEN_(\d+)___/g, (_, idx) => codeTokens[Number(idx)]);
+
+  return res;
+}
+
+function parseMarkdownTables(text){
+  if(typeof text !== 'string' || !text.includes('|')) return text;
+
+  // 헤더행 + 구분자행(-|-) + 1개 이상의 데이터행 매칭
+  const tableRegex = /((?:^[ \t]*\|[^\n]+\|[ \t]*\n)(?:^[ \t]*\|[ \t]*:?-+:?[ \t]*(?:\|[ \t]*:?-+:?[ \t]*)*\|[ \t]*\n)(?:^[ \t]*\|[^\n]+\|[ \t]*(?:\n|$))+)/gm;
+
+  return text.replace(tableRegex, (match) => {
+    const lines = match.trim().split('\n').map(l => l.trim());
+    if (lines.length < 2) return match;
+
+    const parseRowCells = (line) => {
+      let trimmed = line;
+      if (trimmed.startsWith('|')) trimmed = trimmed.slice(1);
+      if (trimmed.endsWith('|')) trimmed = trimmed.slice(0, -1);
+      return trimmed.split('|').map(c => c.trim());
+    };
+
+    const headerCells = parseRowCells(lines[0]);
+    const alignCells = parseRowCells(lines[1]);
+    const alignDirs = alignCells.map(c => {
+      const left = c.startsWith(':');
+      const right = c.endsWith(':');
+      if (left && right) return 'center';
+      if (right) return 'right';
+      if (left) return 'left';
+      return '';
+    });
+
+    const thead = `<thead><tr>${headerCells.map((h, i) => {
+      const align = alignDirs[i] ? ` style="text-align:${alignDirs[i]}"` : '';
+      return `<th${align}>${parseInlineMarkdown(h)}</th>`;
+    }).join('')}</tr></thead>`;
+
+    const rows = lines.slice(2).map(line => {
+      const cells = parseRowCells(line);
+      const rowHtml = cells.map((c, i) => {
+        const align = alignDirs[i] ? ` style="text-align:${alignDirs[i]}"` : '';
+        return `<td${align}>${parseInlineMarkdown(c)}</td>`;
+      }).join('');
+      return `<tr>${rowHtml}</tr>`;
+    }).join('');
+
+    const tbody = `<tbody>${rows}</tbody>`;
+    return `<div class="table-responsive"><table class="markdown-table">${thead}${tbody}</table></div>`;
+  });
+}
+
+function parseContent(content){
+  if(typeof content !== 'string') return content;
+  // 1. 마크다운 테이블 변환
+  let out = parseMarkdownTables(content);
+  // 2. 인라인 마크다운 변환
+  out = parseInlineMarkdown(out);
+  return out;
 }
 
 /* ============ DATA PARSING & ERROR OVERLAY ============ */
@@ -654,8 +772,12 @@ function init(){
     document.documentElement.setAttribute('data-theme','dark');
   }
   if(localStorage.getItem('theme')) document.documentElement.setAttribute('data-theme', localStorage.getItem('theme'));
-  if(localStorage.getItem('sidebar-collapsed') === '1' && window.innerWidth > 840){
+  const isSavedCollapsed = localStorage.getItem('sidebar-collapsed') === '1';
+  if(isSavedCollapsed && window.innerWidth > 840){
     document.getElementById('layout').classList.add('sidebar-collapsed');
+    updateSidebarToggleBtn(true);
+  } else {
+    updateSidebarToggleBtn(false);
   }
   mermaid.initialize({
     startOnLoad: false,
@@ -679,6 +801,14 @@ function init(){
 /* ============ SIDEBAR ============ */
 let openProjects = new Set();
 
+function updateSidebarToggleBtn(isCollapsed){
+  const btn = document.getElementById('sidebar-toggle-btn');
+  if(!btn) return;
+  btn.classList.toggle('collapsed', isCollapsed);
+  btn.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+  btn.title = isCollapsed ? '사이드바 펼치기 ([)' : '사이드바 접기 ([)';
+}
+
 function toggleSidebar(){
   if(window.innerWidth <= 840){
     const sb = document.getElementById('sidebar');
@@ -688,6 +818,7 @@ function toggleSidebar(){
     const layout = document.getElementById('layout');
     const isCollapsed = layout.classList.toggle('sidebar-collapsed');
     localStorage.setItem('sidebar-collapsed', isCollapsed ? '1' : '0');
+    updateSidebarToggleBtn(isCollapsed);
   }
 }
 
@@ -724,7 +855,7 @@ function renderSidebar(){
           <li>
             <a class="sidebar-chapter-link${isActive ? ' active' : ''}" data-idx="${globalIdx}">
               <span class="ch-num">${cIdx+1}</span>
-              <span class="ch-title">${ch.title}</span>
+              <span class="ch-title">${parseInlineMarkdown(ch.title)}</span>
             </a>
           </li>
         `;
@@ -735,7 +866,7 @@ function renderSidebar(){
           <div class="sidebar-project-header" data-pidx="${pIdx}">
             <div class="sidebar-project-title">
               <span class="project-icon">${icon}</span>
-              <span class="project-text">${proj.title}</span>
+              <span class="project-text">${parseInlineMarkdown(proj.title)}</span>
             </div>
             <span class="sidebar-project-badge">${projChapters.length}</span>
             <span class="sidebar-project-chevron">
@@ -770,7 +901,7 @@ function renderSidebar(){
     // Single project mode (하위 호환)
     if(countBadge) countBadge.textContent = `${DATA.chapters.length} Chapters`;
     list.innerHTML = DATA.chapters.map((c, i)=>
-      `<a class="sidebar-chapter-link${i===currentChapter?' active':''}" data-idx="${i}"><span class="ch-num">${i+1}</span><span class="ch-title">${c.title}</span></a>`
+      `<a class="sidebar-chapter-link${i===currentChapter?' active':''}" data-idx="${i}"><span class="ch-num">${i+1}</span><span class="ch-title">${parseInlineMarkdown(c.title)}</span></a>`
     ).join('');
   }
 
@@ -1317,7 +1448,7 @@ function renderChapter(idx){
   const projBreadcrumb = ch._projectTitle ? `<span class="sep">›</span><span style="color:var(--muted);">${ch._projectTitle}</span>` : '';
   const eyebrowText = ch._projectTitle ? `${ch._projectIcon || '📁'} ${ch._projectTitle} · CHAPTER ${(ch._chapterIndex !== undefined ? ch._chapterIndex + 1 : idx + 1)}` : `CHAPTER ${idx+1}`;
   main.innerHTML = `
-    <div class="breadcrumb"><a data-cover="1" style="cursor:pointer;color:var(--muted);">${DATA.title}</a>${projBreadcrumb}<span class="sep">›</span>${ch.title}</div>
+    <div class="breadcrumb"><a data-cover="1" style="cursor:pointer;color:var(--muted);">${DATA.title}</a>${projBreadcrumb}<span class="sep">›</span>${parseInlineMarkdown(ch.title)}</div>
     <div class="chapter-eyebrow">${eyebrowText}</div>
     <h1>${parseInlineMarkdown(ch.title)}</h1>
     <details class="toc-mobile"><summary>이 페이지의 내용</summary><div class="toc-mobile-body" id="toc-list-mobile"></div></details>
@@ -1330,16 +1461,16 @@ function renderChapter(idx){
     <div class="chapter-nav">
       <div class="chapter-nav-card${prev?'':' disabled'}" id="nav-prev">
         <div class="chapter-nav-label">◀ 이전</div>
-        <div class="chapter-nav-title">${prev?prev.title:''}</div>
+        <div class="chapter-nav-title">${prev?parseInlineMarkdown(prev.title):''}</div>
       </div>
       <div class="chapter-nav-card next${next?'':' disabled'}" id="nav-next">
         <div class="chapter-nav-label">다음 ▶</div>
-        <div class="chapter-nav-title">${next?next.title:''}</div>
+        <div class="chapter-nav-title">${next?parseInlineMarkdown(next.title):''}</div>
       </div>
     </div>
   `;
   main.querySelector('[data-cover]').addEventListener('click', renderCover);
-  document.getElementById('sections-container').innerHTML = ch.sections.map((s,si)=>`<h2 id="section-${idx}-${si}">${s.heading}</h2>${parseInlineMarkdown(s.html)}`).join('');
+  document.getElementById('sections-container').innerHTML = ch.sections.map((s,si)=>`<h2 id="section-${idx}-${si}">${parseInlineMarkdown(s.heading)}</h2>${parseContent(s.html)}`).join('');
   if(prev) document.getElementById('nav-prev').addEventListener('click', ()=>renderChapter(idx-1));
   if(next) document.getElementById('nav-next').addEventListener('click', ()=>renderChapter(idx+1));
 
@@ -1513,6 +1644,8 @@ function wireGlobalEvents(){
   if(sbToggle) sbToggle.addEventListener('click', toggleSidebar);
   const hb = document.getElementById('hamburger-btn');
   if(hb) hb.addEventListener('click', toggleSidebar);
+  const sbClose = document.getElementById('sidebar-close-btn');
+  if(sbClose) sbClose.addEventListener('click', closeSidebarDrawer);
   document.getElementById('sidebar-scrim').addEventListener('click', closeSidebarDrawer);
   wireDiagramZoomControls();
   document.getElementById('search-trigger').addEventListener('click', ()=>{openModal('search-modal'); document.getElementById('search-input').focus();});
