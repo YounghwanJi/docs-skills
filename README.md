@@ -17,6 +17,7 @@
 | 스킬 / 도구명 | 위치 링크 | 설명 | 지원 환경 |
 | :--- | :--- | :--- | :--- |
 | **study-material-generator** | [`skills/study-material-generator/`](./skills/study-material-generator/SKILL.md) | 표준/논문 기반의 기술 주제를 깊이 있게 학습·발표할 수 있는 자급자족형(Single-file) HTML 스터디 문서 생성기 | Claude, Codex, Antigravity |
+| **source-onboarding-generator** | [`skills/source-onboarding-generator/`](./skills/source-onboarding-generator/SKILL.md) | 소스 근거와 검증 상태를 갖춘 개발자 온보딩 문서 생성기. 기본 Markdown, HTML 템플릿·학습 UX·검증 도구를 내장한 독립 배포 패키지 | Claude, Codex, Antigravity |
 | **seminar-material-generator** | [`skills/seminar-material-generator/`](./skills/seminar-material-generator/SKILL.md) | 학회, 기술 컨퍼런스, 사내 세미나 발표를 위한 16:9 와이드스크린 반응형 웹 슬라이드 덱(Presentation Deck) 생성기 | Claude, Codex, Antigravity |
 | **scroll-deck-generator** | [`skills/scroll-deck-generator/`](./skills/scroll-deck-generator/SKILL.md) | `seminar-material-generator`를 상속받아 6대 모션 문법과 단일 GSAP 연속 타임라인 기반의 고화질 스크롤 발표 덱(Scrolline v2 deck) 및 MP4 영상 추출을 지원하는 프레젠테이션 생성기 | Claude, Codex, Antigravity |
 | **eli5** | [`skills/eli5/`](./skills/eli5/SKILL.md) | [DreambigOu/ELI5](https://github.com/DreambigOu/ELI5)를 기반으로 수정한 스킬로, 5세 어린이부터 비기술직 경영진, 전공자까지 청중별 맞춤형 설명(대화형 답변 및 인터랙티브 웹 익스플레이너 `eli5.html`) 생성 | Claude, Codex, Antigravity |
@@ -52,6 +53,38 @@
 - **사용 방법**:
   - 에이전트에게 주제와 함께 요청:
     > "QUIC 프로토콜에 대해 study-material-generator 스킬을 사용해서 스터디 자료 만들어줘."
+
+---
+
+### 📖 스킬 상세 안내: `source-onboarding-generator`
+
+- **개요**: 소스 저장소를 분석해 프로젝트 이해, 로컬 실행, 기능 추적·변경·테스트, 배포·운영에 필요한 온보딩 문서를 생성하거나 갱신합니다.
+- **주요 기능 및 상속 범위**:
+  - 실제 소스·설정·테스트·IaC를 근거로 기능 카탈로그, 도메인 용어집, 호출 흐름, API·데이터, 개발·운영 가이드를 작성합니다.
+  - 분석 기준 커밋·날짜·범위와 변경된 작업 트리를 기록하고, 확인된 사실·추론·확인 필요와 명령 실행 결과를 구분합니다.
+  - `study-material-generator`의 근거 중심 작성, 학습 목표·요약·Q&A, 다이어그램 단계별 해설과 단계별 생성을 재사용합니다. HTML 모드에서는 기존 디자인·검색·용어집·테마·TOC·다이어그램 확대·코드 복사 기능을 사용합니다.
+  - RFC 중심 근거, 모든 기술의 대안 비교, 비즈니스 정보 제외, 일괄 클라우드 서술은 소스 온보딩 목적에 맞게 재정의합니다. 필요한 자원을 패키지 내부에 포함하므로 실행 중 부모 스킬을 읽거나 설치할 필요가 없습니다.
+- **입력/출력**:
+  - 입력: 대상 저장소 경로, 선택적으로 모듈·핵심 기능, 문서 범위(P0~P3), 출력 형식과 경로.
+  - 기본 출력: 기존 문서 구조를 우선하는 주제별 Markdown. 새 경로는 대상 저장소의 `docs/onboarding/index.md`와 하위 문서입니다.
+  - HTML 요청: 대상 저장소의 `docs/onboarding/onboarding.html`. 두 형식을 요청하면 Markdown과 같은 근거·검증 결과를 반영합니다.
+- **사용 방법**:
+  > "source-onboarding-generator로 이 저장소의 P0 온보딩 문서를 docs/onboarding/에 Markdown으로 만들어줘."
+  > "source-onboarding-generator로 주문 기능의 진입점부터 DB까지 추적하고, 첫 변경과 테스트 가이드를 단일 onboarding.html로 만들어줘."
+  > "기존 온보딩 Markdown과 같은 내용으로 HTML도 만들고 폐쇄망용 번들을 제공해줘."
+  - HTML 검증·오프라인 번들 예시(이 스킬 저장소 루트 기준, 입력·출력은 실제 파일 경로로 교체):
+    ```bash
+    python skills/source-onboarding-generator/scripts/validate-onboarding.py <onboarding.html 경로>
+    python skills/source-onboarding-generator/scripts/bundle-offline.py <onboarding.html 경로> -o <onboarding-offline.html 경로>
+    ```
+- **의존성 및 사전 요구사항**:
+  - 대상 저장소 읽기 권한과 산출물 경로 쓰기 권한. 빌드·테스트 실행 검증에는 대상 프로젝트의 도구·의존성이 필요하며 미실행 결과는 명시합니다.
+  - **단독 설치**: `skills/source-onboarding-generator/` 전체를 대상 도구의 스킬 디렉터리에 복사하거나 링크합니다. `SKILL.md`, `assets/`, `references/`, `scripts/`가 모두 필요하며 `study-material-generator`는 함께 설치하지 않아도 됩니다. 설치된 스킬 폴더에서는 `python scripts/validate-onboarding.py <HTML 경로>`처럼 실행할 수 있습니다.
+  - Markdown은 별도 라이브러리·API Key가 필요 없습니다. HTML 템플릿·내용/디자인/인터랙션 참고 문서와 검증·번들 도구는 모두 내장되어 있습니다.
+  - HTML 검증·번들: Python 3 표준 라이브러리. 기본 HTML은 Mermaid·D3·폰트 CDN을 사용하며, 오프라인 번들은 포함된 Mermaid 10.9.1·D3 7.9.0 캐시를 인라인으로 넣고 시스템 폰트로 대체합니다. 기본 템플릿 번들에는 다운로드가 필요 없고, 지원 라이브러리를 가져오지 못하면 실패로 종료합니다. 추가 외부 리소스와 소스 근거 링크의 접근 권한은 별도 확인 대상입니다.
+  - HTML 검증기는 기본 JSON·스키마를 검사합니다. 소스 설명의 정확성과 UI 동작은 별도로 확인하며, 각주·용어집 관련 경고도 검토합니다.
+- **파일 위치**: [SKILL.md](./skills/source-onboarding-generator/SKILL.md), [내용 가이드](./skills/source-onboarding-generator/references/content-structure.md), [디자인 토큰](./skills/source-onboarding-generator/references/design-tokens.md), [인터랙션](./skills/source-onboarding-generator/references/interactions.md), [HTML 템플릿](./skills/source-onboarding-generator/assets/template.html), [검증 도구](./skills/source-onboarding-generator/scripts/validate-onboarding.py), [오프라인 번들러](./skills/source-onboarding-generator/scripts/bundle-offline.py), [Mermaid·D3 캐시](./skills/source-onboarding-generator/assets/vendor/).
+- **자원 동기화**: 기반 스킬의 변경은 자동 반영되지 않습니다. 필요한 디자인·인터랙션 변경을 수동으로 반영하고 이 패키지의 문서·템플릿·스크립트를 함께 검증합니다. 내용 가이드는 온보딩에 맞게 수정되어 있으므로 부모 문서로 일괄 덮어쓰지 않습니다.
 
 ---
 
